@@ -1,4 +1,4 @@
-const User = require('');
+const User = require("../schema/userSchema");
 
 /* CREATE USER */
 const createUser = async (user, callback) => {

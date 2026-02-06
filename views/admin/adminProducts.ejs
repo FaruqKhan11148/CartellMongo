@@ -38,30 +38,30 @@
     <%- include("../partials/header") %>
 
         <section class="products-main">
-        <% if (products && products.length > 0) { %>
+          <% if (products && products.length > 0) { %>
             <% products.forEach(product => { %>
-            <div class="product-card">
-                <img src="<%= product.image_url %>" alt="<%= product.name %>" />
+              <div class="product-card">
+                <img src="<%= product.image_url || '/assets/images/no-image.png' %>" alt="<%= product.name %>">
                 <div class="product-info">
-                    <h3><%= product.name %></h3>
-                    <p class="price">₹ <%= product.price %></p>
-                    <p>Stock: <%= product.stock %></p>
-                    <p><%= product.description %></p>
+                  <h3><%= product.name %></h3>
+                  <p class="price">₹ <%= product.price %></p>
+                  <p>Stock: <%= product.stock %></p>
+                  <p><%= product.description %></p>
                 </div>
 
                 <div class="product-actions">
-                <form method="PATCH" action="/admin/products/<%= product.id %>/stock">
+                  <form method="PATCH" action="/api/admin/products-admin/<%= product._id %>/stock">
                     <input type="number" name="quantity" placeholder="Add stock" min="1" />
                     <button type="submit" class="btn-update">Update Stock</button>
-                </form>
+                  </form>
 
-                <a href="/api/admin/products-admin/<%= product.id %>/edit" class="btn-edit">Edit Product</a>
+                  <a href="/api/admin/products-admin/<%= product._id %>/edit" class="btn-edit">Edit Product</a>
                 </div>
-            </div>
+              </div>
             <% }) %>
-        <% } else { %>
+          <% } else { %>
             <p>No products yet.</p>
-        <% } %>
+          <% } %>
         </section>
 
     <%- include("../partials/footer") %>

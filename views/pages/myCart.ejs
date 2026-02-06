@@ -39,52 +39,61 @@
 
     <section class="cart-container">
 
-    <h2 class="cart-title">
-      <ion-icon name="cart-outline"></ion-icon>
-      My Cart
-    </h2>
+      <h2 class="cart-title">
+        <ion-icon name="cart-outline"></ion-icon>
+        My Cart
+      </h2>
 
-        <% if (cartItems.length === 0) { %>
+      <% if (!cartItems || cartItems.length === 0) { %>
 
-      <div class="empty-cart">
-        <p>Your cart is empty</p>
-      </div>
-
-    <% } else { %>
-
-      <% cartItems.forEach(item => { %>
-
-        <div class="cart-card">
-
-          <div class="cart-image">
-            <img 
-              src="<%= item.image_url || '/assets/images/no-image.png' %>" 
-              alt="product"
-            />
-          </div>
-
-          <div class="cart-info">
-            <h4><%= item.name %></h4>
-            <p>₹ <%= item.price %></p>
-            <span>Qty: <%= item.quantity %></span>
-          </div>
-
-          <div class="cart-actions">
-            <form action="/api/cart/remove" method="POST">
-              <input type="hidden" name="productId" value="<%= item.product_id %>">
-              <button class="btn remove">Remove</button>
-            </form>
-          </div>
+        <div class="empty-cart">
+          <p>Your cart is empty 🛒</p>
         </div>
-        
-        <% }) %>
-        <a href="/api/addresses" class="btn">
-            Order
-        </a>
-        
-    <% } %>
 
-  </section>
+      <% } else { %>
+
+        <% cartItems.forEach(item => { %>
+
+          <div class="cart-card">
+
+            <div class="cart-image">
+              <img 
+                src="<%= item.product?.image_url || '/assets/images/no-image.png' %>" 
+                alt="<%= item.product?.name %>"
+              />
+            </div>
+
+            <div class="cart-info">
+              <h4><%= item.product.name %></h4>
+              <p>₹ <%= item.product.price %></p>
+              <span>Qty: <%= item.quantity %></span>
+            </div>
+
+            <div class="cart-actions">
+              <form action="/api/cart/remove" method="POST">
+                <input 
+                  type="hidden" 
+                  name="productId" 
+                  value="<%= item.product._id %>"
+                />
+                <button type="submit" class="btn remove">
+                  Remove
+                </button>
+              </form>
+            </div>
+
+          </div>
+
+        <% }) %>
+
+        <a href="/api/addresses" class="btn order-btn">
+          Order
+        </a>
+
+      <% } %>
+
+    </section>
+
 
       <%- include("../partials/footer") %>
       

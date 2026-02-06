@@ -1,203 +1,164 @@
-const db = require('../config/db');
+const Order = require('../schema/orderSchema');
+const Product = require('../schema/productSchema');
+const Cart = require('../schema/cartSchema'); // for getCartWithProducts
+const mongoose = require('mongoose');
 
-const getCartWithProducts = (userId, callback) => {
-  const sql = `
-    SELECT c.product_id, c.quantity, p.price
-    FROM cart c
-    JOIN products p ON c.product_id = p.id
-    WHERE c.user_id = ?
-  `;
-  db.query(sql, [userId], callback);
+// ========== GET CART WITH PRODUCTS ==========
+const getCartWithProducts = async (userId) => {
+  const cartItems = await Cart.find({ user: userId }).populate(
+    'product',
+    'price stock',
+  );
+  return cartItems.map((item) => ({
+    product_id: item.product._id,
+    quantity: item.quantity,
+    price: item.product.price,
+  }));
 };
 
-const createOrder = (
+// ========== CREATE ORDER ==========
+const createOrder = async (
   userId,
   total,
   shippingAddress,
-  coupon_code = null,
+  coupon = null,
   discount = 0,
-  callback,
 ) => {
-  const addressString =
-    typeof shippingAddress === 'object'
-      ? JSON.stringify(shippingAddress)
-      : shippingAddress;
+  const order = new Order({
+    user: userId,
+    items: [],
+    total,
+    discount,
+    coupon,
+    shippingAddress,
+    status: 'created',
+    statusLogs: [{ status: 'created', date: new Date() }],
+  });
+  await order.save();
+  return order;
+};
 
-  db.query(
-    `INSERT INTO orders 
-     (user_id, total, shipping_address, coupon_code, discount_amount)
-     VALUES (?, ?, ?, ?, ?)`,
-    [userId, total, addressString, coupon_code, discount],
-    callback,
+// ========== ADD ORDER ITEM ==========
+const addOrderItem = async (orderId, productId, quantity, price) => {
+  const order = await Order.findById(orderId);
+  if (!order) return null;
+
+  order.items.push({ product: productId, quantity, price });
+  await order.save();
+  return order;
+};
+
+// ========== CLEAR CART ==========
+const clearCart = async (userId) => {
+  await Cart.deleteMany({ user: userId });
+};
+
+// ========== GET ORDER WITH ITEMS ==========
+const getOrderWithItems = async (orderId, userId) => {
+  const order = await Order.findOne({ _id: orderId, user: userId }).populate(
+    'items.product',
   );
+  return order;
 };
 
-const addOrderItem = (orderId, productId, quantity, price, callback) => {
-  db.query(
-    'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)',
-    [orderId, productId, quantity, price],
-    callback,
-  );
-};
-
-const clearCart = (userId, callback) => {
-  db.query('DELETE FROM cart WHERE user_id = ?', [userId], callback);
-};
-
-const getOrderWithItems = (orderId, userId, callback) => {
-  const sql = `
-    SELECT 
-      o.id AS order_id,
-      o.total,
-      o.createdAt,
-      oi.product_id,
-      oi.quantity,
-      oi.price
-    FROM orders o
-    JOIN order_items oi ON o.id = oi.order_id
-    WHERE o.id = ? AND o.user_id = ?
-  `;
-  db.query(sql, [orderId, userId], callback);
-};
-
+// ========== GET ORDERS BY USER ==========
 const getOrdersByUser = async (userId) => {
-  const sql = `
-    SELECT id, total, discount_amount AS discount, coupon_code,
-           createdAt, payment_status, order_status
-    FROM orders
-    WHERE user_id = ?
-    ORDER BY createdAt DESC
-  `;
-
-  const [rows] = await db.promise().query(sql, [userId]);
-  return rows;
+  return await Order.find({ user: userId })
+    .sort({ createdAt: -1 })
+    .populate('items.product');
 };
 
-const markOrderPaid = (
+// ========== GET ORDERS BY USER PAGINATED ==========
+const getOrdersByUserPaginated = async (userId, limit, offset) => {
+  return await Order.find({ user: userId })
+    .sort({ createdAt: -1 })
+    .skip(offset)
+    .limit(limit)
+    .populate('items.product');
+};
+
+// ========== GET ORDER ==========
+const getOrder = async (userId, orderId) => {
+  return await Order.findOne({ _id: orderId, user: userId }).populate(
+    'items.product',
+  );
+};
+
+// ========== MARK ORDER PAID ==========
+const markOrderPaid = async (
   orderId,
   userId,
   method,
   transactionId,
   isAdmin = false,
-  callback,
 ) => {
-  const sql = `
-    UPDATE orders
-    SET 
-      payment_status = 'success',
-      payment_method = ?,
-      transaction_id = ?,
-      order_status = 'paid'
-    WHERE 
-      id = ?
-      ${!isAdmin ? 'AND user_id = ?' : ''}
-      AND payment_status = 'pending'
-  `;
-  const params = !isAdmin
-    ? [method, transactionId, orderId, userId]
-    : [method, transactionId, orderId];
+  const query = { _id: orderId, paymentStatus: 'pending' };
+  if (!isAdmin) query.user = userId;
 
-  db.query(sql, params, callback);
+  const order = await Order.findOne(query);
+  if (!order) return null;
+
+  order.paymentStatus = 'success';
+  order.paymentMethod = method;
+  order.transactionId = transactionId;
+  order.status = 'paid';
+  order.statusLogs.push({ status: 'paid', date: new Date() });
+  await order.save();
+
+  return order;
 };
 
-const reduceStock = (productId, quantity, callback) => {
-  const sql = `
-    UPDATE products
-    SET stock = stock - ?
-    WHERE id = ? AND stock >= ?
-  `;
-  db.query(sql, [quantity, productId, quantity], callback);
-};
-
-// Cancel order (user)
-const cancelOrder = (orderId, userId, callback) => {
-  const sql = `
-    UPDATE orders
-    SET order_status = 'cancelled'
-    WHERE id = ? 
-      AND user_id = ?
-      AND order_status IN ('created', 'paid')
-  `;
-  db.query(sql, [orderId, userId], callback);
-};
-
-// Admin: update order status
-const updateOrderStatus = (orderId, status, callback) => {
-  const sql = `
-    UPDATE orders
-    SET order_status = ?
-    WHERE id = ?
-  `;
-  db.query(sql, [status, orderId], callback);
-};
-
-// Pagination
-const getOrdersByUserPaginated = (userId, limit, offset, callback) => {
-  const sql = `
-    SELECT id, total, order_status, payment_status, createdAt
-    FROM orders
-    WHERE user_id = ?
-    ORDER BY createdAt DESC
-    LIMIT ? OFFSET ?
-  `;
-  db.query(sql, [userId, limit, offset], callback);
-};
-
-// Timeline log
-const addOrderStatusLog = (orderId, status, callback) => {
-  db.query(
-    'INSERT INTO order_status_logs (order_id, status) VALUES (?, ?)',
-    [orderId, status],
-    callback,
+// ========== REDUCE STOCK ==========
+const reduceStock = async (productId, quantity) => {
+  return await Product.findOneAndUpdate(
+    { _id: productId, stock: { $gte: quantity } },
+    { $inc: { stock: -quantity } },
+    { new: true },
   );
 };
 
-const getOrderTimeline = (orderId, callback) => {
-  db.query(
-    'SELECT status, createdAt FROM order_status_logs WHERE order_id = ? ORDER BY createdAt',
-    [orderId],
-    callback,
-  );
+// ========== CANCEL ORDER ==========
+const cancelOrder = async (orderId, userId) => {
+  const order = await Order.findOne({
+    _id: orderId,
+    user: userId,
+    status: { $in: ['created', 'paid'] },
+  });
+  if (!order) return null;
+  order.status = 'cancelled';
+  order.statusLogs.push({ status: 'cancelled', date: new Date() });
+  await order.save();
+  return order;
 };
 
-const getOrderById = (orderId, callback) => {
-  const sql = `
-    SELECT id, order_status, payment_status
-    FROM orders
-    WHERE id = ?
-  `;
-  db.query(sql, [orderId], callback);
+// ========== UPDATE ORDER STATUS (ADMIN) ==========
+const updateOrderStatus = async (orderId, status) => {
+  const order = await Order.findById(orderId);
+  if (!order) return null;
+  order.status = status;
+  order.statusLogs.push({ status, date: new Date() });
+  await order.save();
+  return order;
 };
 
-const getOrder = (userId, orderId, callback) => {
-  db.query(
-    'SELECT * FROM orders WHERE id=? AND user_id=?',
-    [orderId, userId],
-    callback,
-  );
+// ========== GET ORDER TIMELINE ==========
+const getOrderTimeline = async (orderId) => {
+  const order = await Order.findById(orderId);
+  if (!order) return [];
+  return order.statusLogs;
 };
 
-const beginTransaction = (callback) => {
-  db.beginTransaction(callback);
+// ========== GET ORDER BY ID ==========
+const getOrderById = async (orderId) => {
+  return await Order.findById(orderId);
 };
 
-const commit = (callback) => {
-  db.commit(callback);
+// ========== GET PRODUCT BY ID ==========
+const getProductById = async (productId) => {
+  return await Product.findById(productId);
 };
 
-const rollback = (callback) => {
-  db.rollback(callback);
-};
-
-// get product by id
-const getProductById = (productId, callback) => {
-  const sql = `
-    SELECT id, price, stock 
-    FROM products 
-    WHERE id = ?
-  `;
-  db.query(sql, [productId], callback);
-};
+// Transactions are not needed in MongoDB per se; atomic updates are per document
 
 module.exports = {
   getCartWithProducts,
@@ -209,13 +170,9 @@ module.exports = {
   getOrder,
   reduceStock,
   markOrderPaid,
-  beginTransaction,
-  commit,
-  rollback,
   cancelOrder,
-  updateOrderStatus, // adminOnly
+  updateOrderStatus,
   getOrdersByUserPaginated,
-  addOrderStatusLog, // adminOnly
   getOrderTimeline,
   getOrderById,
   getProductById,

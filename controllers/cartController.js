@@ -1,52 +1,52 @@
 const cartService = require('../services/cartService');
 
-const addToCart = (req, res) => {
-  const userId = req.user._id;
+const addToCart = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { productId, quantity } = req.body;
 
-  const productId = Number(req.body.productId);
-  const quantity = Number(req.body.quantity);
-
-  cartService.addToCart(userId, productId, quantity, (err, result) => {
-    if (err) {
-      console.log('CART ERROR:', err);
-      return res.send(err);
-    }
+    await cartService.addToCart(userId, productId, quantity);
 
     res.redirect('/my-cart');
-  });
-};
-
-const remove = (req, res) => {
-  const { productId } = req.body;
-
-  cartService.removeItem(req.user._id, productId, (err) => {
-    if (err) {
-      return res.render('pages/error', {
-        title: 'Cart Error',
-        message: 'Unable to remove item from cart',
-        redirect: '/my-cart',
-      });
-    }
-
-    res.redirect('/my-cart');
-  });
-};
-
-const view = (req, res) => {
-  cartService.viewCart(req.user._id, (err, results) => {
-    if (err) {
-      return res.status(500).render('pages/error', {
-        title: 'Cart Error 🛒',
-        message: 'Failed to fetch your cart items.',
-        redirect: '/',
-      });
-    }
-
-    res.render('pages/myCart', {
-      cartItems: results,
+  } catch (err) {
+    console.error('CART ERROR:', err);
+    res.render('pages/error', {
+      title: 'Cart Error',
+      message: 'Unable to add item to cart',
+      redirect: '/my-cart'
     });
-  });
+  }
 };
+
+
+const remove = async (req, res) => {
+  try {
+    const { productId } = req.body;
+    await cartService.removeItem(req.user._id, productId);
+
+    res.redirect('/my-cart');
+  } catch (err) {
+    res.render('pages/error', {
+      title: 'Cart Error',
+      message: 'Unable to remove item from cart',
+      redirect: '/my-cart'
+    });
+  }
+};
+
+const view = async (req, res) => {
+  try {
+    const cartItems = await cartService.viewCart(req.user._id);
+    res.render('pages/myCart', { cartItems });
+  } catch (err) {
+    res.status(500).render('pages/error', {
+      title: 'Cart Error 🛒',
+      message: 'Failed to fetch your cart items.',
+      redirect: '/',
+    });
+  }
+};
+
 
 // NEW: view cart with total
 const getMyCart = (req, res) => {

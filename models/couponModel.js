@@ -1,32 +1,12 @@
-const db = require('../config/db');
+const mongoose = require('mongoose');
 
-const addCoupon = (coupon, callback) => {
-  const {
-    code,
-    discount_percent,
-    valid_from,
-    valid_to,
-    min_order_amount,
-    is_active,
-  } = coupon;
-  const sql = `INSERT INTO coupons (code, discount_percent, valid_from, valid_to, min_order_amount, is_active)
-             VALUES (?,?,?,?,?,?)
-             `;
+const couponSchema = new mongoose.Schema({
+  code: { type: String, required: true, unique: true, trim: true },
+  discount_percent: { type: Number, required: true },
+  valid_from: { type: Date, required: true },
+  valid_to: { type: Date, required: true },
+  min_order_amount: { type: Number, default: 0 },
+  is_active: { type: Boolean, default: true },
+}, { timestamps: true });
 
-  db.query(
-    sql,
-    [code, discount_percent, valid_from, valid_to, min_order_amount, is_active],
-    callback,
-  );
-};
-
-const getCouponByCode = (code, callback) => {
-  const sql = `
-    SELECT *
-    FROM coupons
-    WHERE code = ? AND is_active = 1
-  `;
-  db.query(sql, [code], callback);
-};
-
-module.exports = { getCouponByCode, addCoupon };
+module.exports = mongoose.model('Coupon', couponSchema);

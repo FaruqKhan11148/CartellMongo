@@ -1,33 +1,29 @@
-const couponModel = require('../models/couponModel');
+const Coupon = require('../models/couponModel');
 
-const addCoupon = (coupon, callback) => {
-  couponModel.addCoupon(coupon, callback);
+// ADD COUPON
+const addCoupon = async (couponData) => {
+  const coupon = new Coupon(couponData);
+  return await coupon.save();
 };
 
-const applyCoupon = (code, cartTotal, callback) => {
-  couponModel.getCouponByCode(code, (err, results) => {
-    if (err) return callback(err);
-    if (!results.length) return callback('Invalid or inactive coupon');
+// APPLY COUPON
+const applyCoupon = async (code, cartTotal) => {
+  const coupon = await Coupon.findOne({ code, is_active: true });
+  if (!coupon) throw new Error('Invalid or inactive coupon');
 
-    const coupon = results[0];
-    const today = new Date();
+  const today = new Date();
+  if (today < coupon.valid_from || today > coupon.valid_to) {
+    throw new Error('Coupon expired');
+  }
 
-    if (
-      today < new Date(coupon.valid_from) ||
-      today > new Date(coupon.valid_to)
-    ) {
-      return callback('Coupon expired');
-    }
+  if (cartTotal < coupon.min_order_amount) {
+    throw new Error(`Cart total must be at least ${coupon.min_order_amount}`);
+  }
 
-    if (cartTotal < coupon.min_order_amount) {
-      return callback(`Cart total must be at least ${coupon.min_order_amount}`);
-    }
+  const discount = (cartTotal * coupon.discount_percent) / 100;
+  const finalTotal = cartTotal - discount;
 
-    const discount = (cartTotal * coupon.discount_percent) / 100;
-    const finalTotal = cartTotal - discount;
-
-    callback(null, { discount, finalTotal, coupon });
-  });
+  return { discount, finalTotal, coupon };
 };
 
-module.exports = { applyCoupon, addCoupon };
+module.exports = { addCoupon, applyCoupon };

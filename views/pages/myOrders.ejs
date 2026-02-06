@@ -67,28 +67,27 @@
         <div class="order-body">
           <p>
             <strong>Status:</strong>
-            <span class="status <%= order.order_status %>">
-              <%= order.order_status.replaceAll("_", " ") %>
+            <span class="status <%= order.status %>">
+              <%= order.status.replaceAll("_", " ") %>
             </span>
           </p>
 
           <p>
             <strong>Payment:</strong>
-            <%= order.payment_status || "pending" %>
+            <%= order.status === "paid" ? "paid" : "pending" %>
           </p>
 
-          <% if (order.coupon_code) { %>
+          <% if (order.coupon) { %>
             <p>
               <strong>Coupon:</strong>
-              <%= order.coupon_code %>
-              (−₹<%= order.discount %>)
+              Applied (−₹<%= order.discount %>)
             </p>
           <% } %>
         </div>
 
         <!-- actions -->
         <div class="order-actions">
-          <% if (order.order_status !== "paid" && order.order_status !== "shipped" && order.order_status !== "out_for_delivery" && order.order_status !== "delivered" && order.order_status !== "cancelled") { %>
+          <% if (!["paid", "shipped", "delivered", "cancelled"].includes(order.status)) { %>
             <a 
               href="/payments/confirm?orders=<%= order.id %>" 
               class="btn-view pay"

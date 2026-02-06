@@ -1,93 +1,146 @@
-const db = require('../config/db');
+const User = require('../schema/userSchema');
+const Product = require('../schema/productSchema');
+const Order = require('../schema/orderSchema');
+const Category = require('../schema/categorySchema');
+const Subcategory = require('../schema/subcategorySchema');
 
-const getDashboardStats = (callback) => {
-  const sql = `
-    SELECT
-      (SELECT COUNT(*) FROM users) AS totalUsers,
+// ============================
+// DASHBOARD STATS
+// ============================
+const getDashboardStats = async (callback) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const totalProducts = await Product.countDocuments();
+    const lowStockProducts = await Product.countDocuments({ stock: { $lte: 5 } });
+    const totalOrders = await Order.countDocuments();
+    const paidOrders = await Order.countDocuments({ order_status: 'paid' });
+    const shippedOrders = await Order.countDocuments({ order_status: 'shipped' });
+    const outForDeliveryOrders = await Order.countDocuments({ order_status: 'out_for_delivery' });
+    const deliveredOrders = await Order.countDocuments({ order_status: 'delivered' });
+    const cancelledOrders = await Order.countDocuments({ order_status: 'cancelled' });
+    const totalRevenueAgg = await Order.aggregate([
+      { $match: { payment_status: 'success' } },
+      { $group: { _id: null, totalRevenue: { $sum: '$total' } } },
+    ]);
+    const totalRevenue = totalRevenueAgg[0]?.totalRevenue || 0;
 
-      (SELECT COUNT(*) FROM products) AS totalProducts,
-      (SELECT COUNT(*) FROM products WHERE stock <= 5) AS lowStockProducts,
-
-      (SELECT COUNT(*) FROM orders) AS totalOrders,
-
-      (SELECT COUNT(*) FROM orders WHERE order_status = 'paid') AS paidOrders,
-      (SELECT COUNT(*) FROM orders WHERE order_status = 'shipped') AS shippedOrders,
-      (SELECT COUNT(*) FROM orders WHERE order_status = 'out_for_delivery') AS outForDeliveryOrders,
-      (SELECT COUNT(*) FROM orders WHERE order_status = 'delivered') AS deliveredOrders,
-      (SELECT COUNT(*) FROM orders WHERE order_status = 'cancelled') AS cancelledOrders,
-
-      (SELECT IFNULL(SUM(total),0)
-         FROM orders
-         WHERE payment_status = 'success') AS totalRevenue
-  `;
-
-  db.query(sql, callback);
+    callback(null, {
+      totalUsers,
+      totalProducts,
+      lowStockProducts,
+      totalOrders,
+      paidOrders,
+      shippedOrders,
+      outForDeliveryOrders,
+      deliveredOrders,
+      cancelledOrders,
+      totalRevenue,
+    });
+  } catch (err) {
+    callback(err);
+  }
 };
 
-const getAllUsers = (callback) => {
-  const sql = `
-    SELECT id, email, name, role, createdAt
-    FROM users
-    ORDER BY createdAt DESC
-  `;
-  db.query(sql, callback);
+// ============================
+// GET ALL USERS
+// ============================
+const getAllUsers = async (callback) => {
+  try {
+    const users = await User.find().sort({ createdAt: -1 }).lean();
+    callback(null, users);
+  } catch (err) {
+    callback(err);
+  }
 };
 
-const getAllOrders = (callback) => {
-  const sql = `
-    SELECT id, user_id, total, payment_status, payment_method,
-           order_status, createdAt
-    FROM orders
-    ORDER BY createdAt DESC
-  `;
-  db.query(sql, callback);
+// ============================
+// GET ALL ORDERS
+// ============================
+const getAllOrders = async (callback) => {
+  try {
+    const orders = await Order.find().sort({ createdAt: -1 }).lean();
+    callback(null, orders);
+  } catch (err) {
+    callback(err);
+  }
 };
 
-const getLowStockProducts = (callback) => {
-  const sql = `
-    SELECT id, name, stock
-    FROM products
-    WHERE stock <= 10
-    ORDER BY stock ASC
-  `;
-  db.query(sql, callback);
+// ============================
+// GET LOW STOCK PRODUCTS
+// ============================
+const getLowStockProducts = async (callback) => {
+  try {
+    const products = await Product.find({ stock: { $lte: 10 } })
+      .sort({ stock: 1 })
+      .lean();
+    callback(null, products);
+  } catch (err) {
+    callback(err);
+  }
 };
 
-const getSubcategoriesByCategory = (categoryId, callback) => {
-  const sql = 'SELECT id, name FROM subcategories WHERE category_id = ?';
-
-  db.query(sql, [categoryId], callback);
+// ============================
+// GET SUBCATEGORIES BY CATEGORY
+// ============================
+const getSubcategoriesByCategory = async (categoryId, callback) => {
+  try {
+    const subcategories = await Subcategory.find({ category: categoryId }).lean();
+    callback(null, subcategories);
+  } catch (err) {
+    callback(err);
+  }
 };
 
-const getAllCategories = (callback) => {
-  const sql = 'SELECT id, name FROM categories ORDER BY name';
-  db.query(sql, callback);
+// ============================
+// GET ALL CATEGORIES
+// ============================
+const getAllCategories = async (callback) => {
+  try {
+    const categories = await Category.find().sort({ name: 1 }).lean();
+    callback(null, categories);
+  } catch (err) {
+    callback(err);
+  }
 };
 
-const getProductById = (productId, callback) => {
-  const sql = 'SELECT * FROM products WHERE id = ?';
-  db.query(sql, [productId], (err, results) => {
-    if (err) return callback(err);
-    callback(null, results[0]); // return only the first row
-  });
+// ============================
+// GET PRODUCT BY ID
+// ============================
+const getProductById = async (productId, callback) => {
+  try {
+    const product = await Product.findById(productId).lean();
+    callback(null, product);
+  } catch (err) {
+    callback(err);
+  }
 };
 
-const getAllUsersWithOrderCount = (callback) => {
-  const sql = `
-    SELECT 
-      u.id,
-      u.name,
-      u.email,
-      COUNT(o.id) AS totalOrders
-    FROM users u
-    LEFT JOIN orders o ON u.id = o.user_id
-    GROUP BY u.id
-  `;
-
-  db.query(sql, (err, results) => {
-    if (err) return callback(err);
-    callback(null, results);
-  });
+// ============================
+// GET USERS WITH ORDER COUNT
+// ============================
+const getAllUsersWithOrderCount = async (callback) => {
+  try {
+    const usersWithOrders = await User.aggregate([
+      {
+        $lookup: {
+          from: 'orders',       // collection name in Mongo
+          localField: '_id',
+          foreignField: 'user',
+          as: 'orders',
+        },
+      },
+      {
+        $project: {
+          name: 1,
+          email: 1,
+          totalOrders: { $size: '$orders' },
+        },
+      },
+    ]);
+    callback(null, usersWithOrders);
+  } catch (err) {
+    callback(err);
+  }
 };
 
 module.exports = {

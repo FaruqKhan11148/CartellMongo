@@ -1,79 +1,36 @@
-const db = require('../config/db');
+const mongoose = require('mongoose');
+const { Schema, model, Types } = mongoose;
 
-// const findByUserId = (userId) => {
-//   return new Promise((resolve, reject) => {
-//     const sql = `
-//       SELECT w.id, p.*
-//       FROM wishlists w
-//       JOIN products p ON w.product_id = p.id
-//       WHERE w.user_id = ?
-//     `;
-//     db.query(sql, [userId], (err, rows) => {
-//       if (err) reject(err);
-//       else resolve(rows);
-//     });
-//   });
-// };
+const wishListSchema = new Schema({
+  user_id: { type: Types.ObjectId, ref: 'User', required: true },
+  product_id: { type: Types.ObjectId, ref: 'Product', required: true },
+  createdAt: { type: Date, default: Date.now },
+});
 
-const findByUserId = (userId) => {
-  return new Promise((resolve, reject) => {
-    const sql = `
-      SELECT 
-        w.id AS wishlist_id,
-        w.product_id AS product_id,
-        p.id AS product_real_id,
-        p.name,
-        p.price,
-        p.image_url,
-        p.stock
-      FROM wishlists w
-      JOIN products p ON w.product_id = p.id
-      WHERE w.user_id = ?
-    `;
+// Static methods
+wishListSchema.statics.findByUserId = async function (userId) {
+  const docs = await this.find({ user_id: userId }).populate(
+    'product_id',
+    'name price image_url stock',
+  );
+  return docs;
+};
 
-    db.query(sql, [userId], (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
+wishListSchema.statics.exists = async function (userId, productId) {
+  const doc = await this.findOne({ user_id: userId, product_id: productId });
+  return !!doc;
+};
+
+wishListSchema.statics.createItem = async function (userId, productId) {
+  return this.create({ user_id: userId, product_id: productId });
+};
+
+wishListSchema.statics.removeItem = async function (userId, productId) {
+  const result = await this.deleteOne({
+    user_id: userId,
+    product_id: productId,
   });
+  return result.deletedCount > 0;
 };
 
-const exists = (userId, productId) => {
-  return new Promise((resolve, reject) => {
-    const sql = `SELECT id FROM wishlists WHERE user_id = ? AND product_id = ?`;
-    db.query(sql, [userId, productId], (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows.length > 0);
-    });
-  });
-};
-
-const create = (userId, productId) => {
-  return new Promise((resolve, reject) => {
-    const sql = `
-      INSERT INTO wishlists (user_id, product_id, createdAt)
-      VALUES (?, ?, NOW())
-    `;
-    db.query(sql, [userId, productId], (err, result) => {
-      if (err) reject(err);
-      else resolve(result);
-    });
-  });
-};
-
-const remove = (wishlistId, userId) => {
-  return new Promise((resolve, reject) => {
-    const sql = `DELETE FROM wishlists WHERE id = ? AND user_id = ?`;
-    db.query(sql, [wishlistId, userId], (err, result) => {
-      if (err) reject(err);
-      else resolve(result);
-    });
-  });
-};
-
-module.exports = {
-  findByUserId,
-  exists,
-  create,
-  remove,
-};
+module.exports = model('WishList', wishListSchema);

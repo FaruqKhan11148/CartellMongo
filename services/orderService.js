@@ -1,367 +1,195 @@
-const orderModel = require('../models/orderModel');
-const addressModel = require('../models/addressModel');
-const couponModel = require('../models/couponModel');
+const Order = require('../models/orderModel');
+const Cart = require('../models/cartModel');
+const Address = require('../models/addressModel');
+const Coupon = require('../models/couponModel');
+const Product = require('../models/productModel');
 
-// const placeOrder = (userId, addressId, coupon_code, callback) => {
-//   orderModel.beginTransaction((err) => {
-//     if (err) return callback(err);
-
-//     // Fetch cart
-//     orderModel.getCartWithProducts(userId, (err, cartItems) => {
-//       if (err || !cartItems.length) {
-//         return orderModel.rollback(() => callback(err || 'Cart empty'));
-//       }
-
-//       // Fetch & validate address
-//       addressModel.getAddressById(userId, addressId, (err, addresses) => {
-//         if (err || !addresses.length) {
-//           return orderModel.rollback(() => callback('Invalid address'));
-//         }
-
-//         const shippingAddress = JSON.stringify(addresses[0]);
-
-//         // Calculate total
-//         let total = cartItems.reduce(
-//           (sum, item) => sum + item.price * item.quantity,
-//           0
-//         );
-//         let discount = 0;
-
-//         // Apply coupon if exists
-//         const applyCoupon = () => {
-//           if (!coupon_code) return createOrder(total, discount);
-
-//           couponModel.getCouponByCode(coupon_code, (err, coupons) => {
-//             if (!err && coupons.length) {
-//               const coupon = coupons[0];
-//               const now = new Date();
-//               if (
-//                 coupon.is_active &&
-//                 new Date(coupon.valid_from) <= now &&
-//                 now <= new Date(coupon.valid_to) &&
-//                 total >= coupon.min_order_amount
-//               ) {
-//                 discount = (total * coupon.discount_percent) / 100;
-//                 total -= discount;
-//               }
-//             }
-//             createOrder(total, discount);
-//           });
-//         };
-
-//         // Create order WITH address snapshot
-//         const createOrder = (finalTotal, discount) => {
-//           orderModel.createOrder(
-//             userId,
-//             finalTotal,
-//             shippingAddress,
-//             coupon_code || null,
-//             discount,
-//             (err, orderResult) => {
-//               if (err) return orderModel.rollback(() => callback(err));
-
-//               const orderId = orderResult.insertId;
-//               orderModel.addOrderStatusLog(orderId, 'created');
-              
-//               let index = 0;
-
-//               const processNextItem = () => {
-//                 if (index === cartItems.length) {
-//                   return orderModel.clearCart(userId, (err) => {
-//                     if (err) return orderModel.rollback(() => callback(err));
-//                     return orderModel.commit(() => {
-//                       callback(null, { orderId, total: finalTotal, discount });
-//                     });
-//                   });
-//                 }
-
-//                 const item = cartItems[index];
-
-//                 orderModel.addOrderItem(
-//                   orderId,
-//                   item.product_id,
-//                   item.quantity,
-//                   item.price,
-//                   (err) => {
-//                     if (err) return orderModel.rollback(() => callback(err));
-
-//                     orderModel.reduceStock(
-//                       item.product_id,
-//                       item.quantity,
-//                       (err, result) => {
-//                         if (err || result.affectedRows === 0) {
-//                           return orderModel.rollback(() =>
-//                             callback({
-//                               message:"Insufficient stock",
-//                               productId:[item.product_id]
-//                             })
-//                           );
-//                         }
-
-//                         index++;
-//                         processNextItem();
-//                       }
-//                     );
-//                   }
-//                 );
-//               };
-
-//               processNextItem();
-//             }
-//           );
-//         };
-
-//         applyCoupon();
-//       });
-//     });
-//   });
-// };
-
-
-// fetch cart
-const fetchCart = (userId, callback) => {
-  orderModel.getCartWithProducts(userId, (err, cartItems) => {
-    if (err || !cartItems.length) return callback(err || 'Cart empty');
-    callback(null, cartItems);
-  });
+// =================== FETCH CART ===================
+const fetchCart = async (userId) => {
+  const cartItems = await Cart.find({ user: userId }).populate('product');
+  if (!cartItems.length) throw new Error('Cart empty');
+  return cartItems;
 };
 
-// validateAddress
-const validateAddress = (userId, addressId, callback) => {
-  addressModel.getAddressById(userId, addressId, (err, addresses) => {
-    if (err || !addresses.length) return callback('Invalid address');
-    callback(null, JSON.stringify(addresses[0]));
-  });
+// =================== VALIDATE ADDRESS ===================
+const validateAddress = async (userId, addressId) => {
+  const address = await Address.findOne({ _id: addressId, user: userId });
+  if (!address) throw new Error('Invalid address');
+  return address;
 };
 
-// applyCoupon
-const applyCoupon = (coupon_code, total, callback) => {
-  if (!coupon_code) return callback(null, total, 0);
+// =================== APPLY COUPON ===================
+const applyCoupon = async (coupon_code, total) => {
+  if (!coupon_code) return { finalTotal: total, discount: 0 };
 
-  couponModel.getCouponByCode(coupon_code, (err, coupons) => {
-    let discount = 0;
-    if (!err && coupons.length) {
-      const coupon = coupons[0];
-      const now = new Date();
-      if (
-        coupon.is_active &&
-        new Date(coupon.valid_from) <= now &&
-        now <= new Date(coupon.valid_to) &&
-        total >= coupon.min_order_amount
-      ) {
-        discount = (total * coupon.discount_percent) / 100;
-        total -= discount;
-      }
+  const coupon = await Coupon.findOne({ code: coupon_code, is_active: true });
+  if (!coupon) throw new Error('Invalid or inactive coupon');
+
+  const now = new Date();
+  if (now < coupon.valid_from || now > coupon.valid_to)
+    throw new Error('Coupon expired');
+
+  if (total < coupon.min_order_amount)
+    throw new Error(`Cart total must be at least ${coupon.min_order_amount}`);
+
+  const discount = (total * coupon.discount_percent) / 100;
+  return { finalTotal: total - discount, discount };
+};
+
+// =================== CREATE ORDER AND ITEMS ===================
+const createOrderAndItems = async (userId, cartItems, shippingAddress, coupon_code, total, discount) => {
+  const order = new Order({
+    user: userId,
+    items: [],
+    total,
+    discount,
+    coupon: coupon_code || null,
+    shippingAddress,
+    status: 'created',
+    statusLogs: [{ status: 'created', date: new Date() }],
+  });
+
+  for (let item of cartItems) {
+    // reduce product stock
+    const product = await Product.findById(item.product._id);
+    if (!product || product.stock < item.quantity) {
+      throw { message: 'Insufficient stock', productId: item.product._id };
     }
-    callback(null, total, discount);
-  });
-};
+    product.stock -= item.quantity;
+    await product.save();
 
-// createOrderAndItems 
-const createOrderAndItems = (userId, cartItems, shippingAddress, coupon_code, total, discount, callback) => {
-  orderModel.createOrder(userId, total, shippingAddress, coupon_code || null, discount, (err, orderResult) => {
-    if (err) return callback(err);
-    const orderId = orderResult.insertId;
-    orderModel.addOrderStatusLog(orderId, 'created');
-
-    let index = 0;
-    const processNextItem = () => {
-      if (index === cartItems.length) {
-        return orderModel.clearCart(userId, (err) => {
-          if (err) return callback(err);
-          return callback(null, { orderId, total, discount });
-        });
-      }
-
-      const item = cartItems[index];
-
-      orderModel.addOrderItem(orderId, item.product_id, item.quantity, item.price, (err) => {
-        if (err) return callback(err);
-
-        orderModel.reduceStock(item.product_id, item.quantity, (err, result) => {
-          if (err || result.affectedRows === 0) {
-            return callback({
-              message: "Insufficient stock",
-              productId: [item.product_id]
-            });
-          }
-
-          index++;
-          processNextItem();
-        });
-      });
-    };
-
-    processNextItem();
-  });
-};
-
-// place Order
-const placeOrder = (userId, addressId, coupon_code, callback) => {
-  orderModel.beginTransaction((err) => {
-    if (err) return callback(err);
-
-    fetchCart(userId, (err, cartItems) => {
-      if (err || !cartItems.length)
-        return orderModel.rollback(() =>
-          callback({ message: 'Cart is empty' })
-        );
-
-      validateAddress(userId, addressId, (err, shippingAddress) => {
-        if (err)
-          return orderModel.rollback(() => callback(err));
-
-        const cartTotal = cartItems.reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0
-        );
-
-        if (!coupon_code) {
-          return createOrderAndItems(
-            userId,
-            cartItems,
-            shippingAddress,
-            null,
-            cartTotal,
-            0,
-            (err, result) => {
-              if (err)
-                return orderModel.rollback(() => callback(err));
-
-              orderModel.commit(() => callback(null, result));
-            }
-          );
-        }
-
-        // VALIDATE COUPON AGAIN
-        couponService.applyCoupon(coupon_code, cartTotal, (err, couponResult) => {
-
-          // invalid coupon → ignore silently
-          if (err) {
-            return createOrderAndItems(
-              userId,
-              cartItems,
-              shippingAddress,
-              null,
-              cartTotal,
-              0,
-              (err, result) => {
-                if (err)
-                  return orderModel.rollback(() => callback(err));
-
-                orderModel.commit(() => callback(null, result));
-              }
-            );
-          }
-
-          // valid coupon
-          createOrderAndItems(
-            userId,
-            cartItems,
-            shippingAddress,
-            coupon_code,
-            couponResult.finalTotal,
-            couponResult.discount,
-            (err, result) => {
-              if (err)
-                return orderModel.rollback(() => callback(err));
-
-              orderModel.commit(() => callback(null, result));
-            }
-          );
-        });
-      });
+    order.items.push({
+      product: item.product._id,
+      quantity: item.quantity,
+      price: item.product.price,
     });
+  }
+
+  await order.save();
+
+  // clear user's cart
+  await Cart.deleteMany({ user: userId });
+
+  return { orderId: order._id, total, discount };
+};
+
+// =================== PLACE ORDER ===================
+const placeOrder = async (userId, addressId, coupon_code) => {
+  const cartItems = await fetchCart(userId);
+  const shippingAddress = await validateAddress(userId, addressId);
+
+  const cartTotal = cartItems.reduce(
+    (sum, item) => sum + item.product.price * item.quantity,
+    0
+  );
+
+  let finalTotal = cartTotal;
+  let discount = 0;
+
+  if (coupon_code) {
+    try {
+      const couponResult = await applyCoupon(coupon_code, cartTotal);
+      finalTotal = couponResult.finalTotal;
+      discount = couponResult.discount;
+    } catch (err) {
+      // ignore invalid coupon
+      console.warn('Coupon ignored:', err.message);
+    }
+  }
+
+  return createOrderAndItems(userId, cartItems, shippingAddress, coupon_code, finalTotal, discount);
+};
+
+// =================== PLACE SINGLE PRODUCT ORDER (BUY NOW) ===================
+const placeSingleProductOrder = async (userId, productId, addressId) => {
+  // Validate address
+  const shippingAddress = await Address.findOne({ _id: addressId, user: userId });
+  if (!shippingAddress) throw new Error('Invalid address');
+
+  // Get product
+  const product = await Product.findById(productId);
+  if (!product) throw new Error('Product not found');
+  if (product.stock < 1) throw new Error('Out of stock');
+
+  // Prepare order item
+  const cartItems = [
+    {
+      product: product._id,
+      quantity: 1,
+      price: product.price,
+    },
+  ];
+  const total = product.price;
+  const discount = 0;
+
+  // Reduce stock
+  product.stock -= 1;
+  await product.save();
+
+  // Create order
+  const order = new Order({
+    user: userId,
+    items: cartItems,
+    total,
+    discount,
+    coupon: null,
+    shippingAddress,
+    status: 'created',
+    statusLogs: [{ status: 'created', date: new Date() }],
   });
+
+  await order.save();
+
+  return { orderId: order._id, total, discount };
 };
 
-// place single product order (BUY NOW)
-const placeSingleProductOrder = (userId, productId, addressId, callback) => {
-  orderModel.beginTransaction((err) => {
-    if (err) return callback(err);
-
-    // validate address
-    validateAddress(userId, addressId, (err, shippingAddress) => {
-      if (err)
-        return orderModel.rollback(() => callback(err));
-
-      // get product
-      orderModel.getProductById(productId, (err, products) => {
-        if (err || !products.length)
-          return orderModel.rollback(() =>
-            callback({ message: 'Product not found' })
-          );
-
-        const product = products[0];
-
-        if (product.stock < 1) {
-          return orderModel.rollback(() =>
-            callback({ message: 'Out of stock' })
-          );
-        }
-
-        const cartItems = [{
-          product_id: product.id,
-          quantity: 1,
-          price: product.price
-        }];
-
-        const total = product.price;
-
-        createOrderAndItems(
-          userId,
-          cartItems,
-          shippingAddress,
-          null,
-          total,
-          0,
-          (err, result) => {
-            if (err)
-              return orderModel.rollback(() => callback(err));
-
-            orderModel.commit(() => callback(null, result));
-          }
-        );
-      });
-    });
-  });
+// =================== GET SINGLE ORDER ===================
+const getOrder = async (userId, orderId) => {
+  const order = await Order.findOne({ _id: orderId, user: userId }).populate('items.product');
+  if (!order) throw new Error('Order not found');
+  return order;
 };
 
-
-// Get single order by id
-const getOrder = (userId, orderId, callback) => {
-  orderModel.getOrderWithItems(orderId, userId, callback);
-};
-
-// Get all orders of user
+// =================== GET ALL ORDERS OF USER ===================
 const getOrders = async (userId) => {
-  const orders = await orderModel.getOrdersByUser(userId);
+  const orders = await Order.find({ user: userId }).sort({ createdAt: -1 }).populate('items.product');
   return { orders };
 };
 
-// cancelling orders
-const cancelOrder = (userId, orderId, callback) => {
-  orderModel.cancelOrder(orderId, userId, (err, result) => {
-    if (err) return callback(err);
-    if (result.affectedRows === 0) return callback('Order cannot be cancelled');
+// =================== CANCEL ORDER ===================
+const cancelOrder = async (userId, orderId) => {
+  const order = await Order.findOne({ _id: orderId, user: userId });
+  if (!order) throw new Error('Order not found or access denied');
 
-    orderModel.addOrderStatusLog(orderId, 'cancelled', () => {});
-    callback(null, 'Order cancelled');
-  });
+  if (order.status === 'cancelled' || order.status === 'delivered') {
+    throw new Error('Order cannot be cancelled');
+  }
+
+  order.status = 'cancelled';
+  order.statusLogs.push({ status: 'cancelled', date: new Date() });
+  await order.save();
+
+  return 'Order cancelled';
 };
 
-const getOrdersPaginated = (userId, page = 1, limit = 5, callback) => {
-  const offset = (page - 1) * limit;
-  orderModel.getOrdersByUserPaginated(userId, limit, offset, callback);
+// =================== GET ORDERS PAGINATED ===================
+const getOrdersPaginated = async (userId, page = 1, limit = 5) => {
+  const skip = (page - 1) * limit;
+  const orders = await Order.find({ user: userId })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    .populate('items.product');
+
+  return orders;
 };
 
-const getOrderTimeline = (userId, orderId, callback) => {
-  orderModel.getOrder(userId, orderId, (err, orders)=>{
-    if(err) return callback(err);
-    if(!orders || !orders.length) return callback("Order not found or access denied");
-    
-    orderModel.getOrderTimeline(orderId, callback);
-  })
+// =================== GET ORDER TIMELINE ===================
+const getOrderTimeline = async (userId, orderId) => {
+  const order = await Order.findOne({ _id: orderId, user: userId });
+  if (!order) throw new Error('Order not found or access denied');
+
+  return order.statusLogs;
 };
 
 module.exports = {

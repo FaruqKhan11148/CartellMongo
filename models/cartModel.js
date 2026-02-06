@@ -1,65 +1,42 @@
-const db = require('../config/db');
+// const mongoose = require('mongoose');
+// const Cart = require('../schema/cartSchema');
+// const Product = require('../schema/productSchema');
 
-const addToCart = (userId, productId, quantity, callback) => {
-  // Check current stock first
-  db.query(
-    'SELECT stock FROM products WHERE id = ?',
-    [productId],
-    (err, result) => {
-      if (err) return callback(err);
-      if (!result.length) return callback('Product not found');
+// const addToCart = async (userId, productId, quantity) => {
+//   const uid = mongoose.Types.ObjectId(userId);
+//   const pid = mongoose.Types.ObjectId(productId);
 
-      const stock = result[0].stock;
-      if (quantity > stock) return callback('Quantity exceeds available stock');
+//   // check stock
+//   const product = await Product.findById(pid);
+//   if (!product) throw new Error('Product not found');
+//   if (quantity > product.stock) throw new Error('Quantity exceeds stock');
 
-      // Insert/update cart
-      const sql = `
-      INSERT INTO cart (user_id, product_id, quantity)
-      VALUES (?, ?, ?)
-      ON DUPLICATE KEY UPDATE
-        quantity = quantity + VALUES(quantity),
-        updated_at = CURRENT_TIMESTAMP
-    `;
-      db.query(sql, [userId, productId, quantity], callback);
-    },
-  );
-};
+//   // add or update cart
+//   const existing = await Cart.findOne({ user: uid, product: pid });
+//   if (existing) {
+//     existing.quantity += quantity;
+//     return await existing.save();
+//   } else {
+//     const newItem = new Cart({ user: uid, product: pid, quantity });
+//     return await newItem.save();
+//   }
+// };
 
-const removeFromCart = (userId, productId, callback) => {
-  db.query(
-    'DELETE FROM cart WHERE user_id = ? AND product_id = ?',
-    [userId, productId],
-    callback,
-  );
-};
+// const removeFromCart = async (userId, productId) => {
+//   const uid = mongoose.Types.ObjectId(userId);
+//   const pid = mongoose.Types.ObjectId(productId);
+//   return await Cart.findOneAndDelete({ user: uid, product: pid });
+// };
 
-const getCart = (userId, callback) => {
-  const sql = `
-    SELECT 
-      c.id AS cart_id,
-      c.product_id,
-      c.quantity,
-      c.createdAt,
-      c.updated_at,
-      p.name,
-      p.price,
-      p.image_url
-    FROM cart c
-    JOIN products p ON c.product_id = p.id
-    WHERE c.user_id = ?
-  `;
-  db.query(sql, [userId], callback);
-};
+// const getCart = async (userId) => {
+//   const uid = mongoose.Types.ObjectId(userId);
+//   return await Cart.find({ user: uid }).populate('product').lean();
+// };
 
-// NEW: get cart with only product_id, quantity, price (for orders)
-const getCartWithProducts = (userId, callback) => {
-  const sql = `
-    SELECT c.product_id, p.name, c.quantity, p.price
-    FROM cart c
-    JOIN products p ON c.product_id = p.id
-    WHERE c.user_id = ?
-  `;
-  db.query(sql, [userId], callback);
-};
+// const getCartWithProducts = async (userId) => {
+//   const items = await getCart(userId);
+//   const total = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+//   return { items, total };
+// };
 
-module.exports = { addToCart, removeFromCart, getCart, getCartWithProducts };
+// module.exports = { addToCart, removeFromCart, getCart, getCartWithProducts };

@@ -1,195 +1,77 @@
-// const db = require('../config/db');
+// const Address = require('../schema/addressSchema');
 
-// const getAllAddresses = (userId, callback) => {
-//   const sql = `
-//     SELECT *
-//     FROM addresses
-//     WHERE user_id = ?
-//     ORDER BY is_default DESC, createdAt DESC
-//   `;
-//   db.query(sql, [userId], callback);
+// /* GET ALL ADDRESSES */
+// const getAllAddresses = async (userId, callback) => {
+//   try {
+//     const addresses = await Address.find({ user: userId })
+//       .sort({ is_default: -1 })
+//       .lean();
+//     callback(null, addresses);
+//   } catch (err) {
+//     callback(err);
+//   }
 // };
 
-// const getAddressById = (userId, addressId, callback) => {
-//   const sql = `
-//     SELECT *
-//     FROM addresses
-//     WHERE id = ? AND user_id = ?
-//   `;
-//   db.query(sql, [addressId, userId], callback);
+// /* GET SINGLE ADDRESS BY ID */
+// const getAddressById = async (userId, addressId, callback) => {
+//   try {
+//     const address = await Address.findOne({ _id: addressId, user: userId }).lean();
+//     callback(null, address ? [address] : []);
+//   } catch (err) {
+//     callback(err);
+//     console.log(err);
+//   }
 // };
 
-// const createAddress = (userId, addressData, callback) => {
-//   const {
-//     address_line1,
-//     address_line2,
-//     city,
-//     state,
-//     pincode,
-//     country,
-//     name,
-//     phone,
-//     is_default,
-//   } = addressData;
-
-//   const sql = `
-//     INSERT INTO addresses
-//     (user_id, address_line1, address_line2, city, state, pincode, country, name, phone, is_default)
-//     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-//   `;
-
-//   db.query(
-//     sql,
-//     [
-//       userId,
-//       address_line1,
-//       address_line2,
-//       city,
-//       state,
-//       pincode,
-//       country,
-//       name,
-//       phone,
-//       is_default || 0,
-//     ],
-//     callback
-//   );
+// /* CREATE NEW ADDRESS */
+// const createAddress = async (userId, data, callback) => {
+//   try {
+//     const newAddress = await Address.create({ user: userId, ...data });
+//     callback(null, newAddress);
+//   } catch (err) {
+//     callback(err);
+//   }
 // };
 
-// const updateAddress = (userId, addressId, data, callback) => {
-//   const sql = `
-//     UPDATE addresses
-//     SET ?
-//     WHERE id = ? AND user_id = ?
-//   `;
-//   db.query(sql, [data, addressId, userId], callback);
+// /* CLEAR DEFAULT ADDRESS */
+// const clearDefaultAddress = async (userId, callback) => {
+//   try {
+//     await Address.updateMany({ user: userId }, { is_default: false });
+//     callback(null);
+//   } catch (err) {
+//     callback(err);
+//   }
 // };
 
-// const deleteAddress = (userId, addressId, callback) => {
-//   const sql = `
-//     DELETE FROM addresses
-//     WHERE id = ? AND user_id = ?
-//   `;
-//   db.query(sql, [addressId, userId], callback);
+// /* UPDATE ADDRESS */
+// const updateAddress = async (userId, addressId, data, callback) => {
+//   try {
+//     const updatedAddress = await Address.findOneAndUpdate(
+//       { _id: addressId, user: userId },
+//       data,
+//       { new: true }
+//     );
+//     callback(null, updatedAddress);
+//   } catch (err) {
+//     callback(err);
+//   }
 // };
 
-// const clearDefaultAddress = (userId, callback) => {
-//   const sql = `
-//     UPDATE addresses
-//     SET is_default = 0
-//     WHERE user_id = ?
-//   `;
-//   db.query(sql, [userId], callback);
+// /* DELETE ADDRESS */
+// const deleteAddress = async (userId, addressId, callback) => {
+//   try {
+//     await Address.deleteOne({ _id: addressId, user: userId });
+//     callback(null);
+//   } catch (err) {
+//     callback(err);
+//   }
 // };
 
 // module.exports = {
 //   getAllAddresses,
 //   getAddressById,
 //   createAddress,
+//   clearDefaultAddress,
 //   updateAddress,
 //   deleteAddress,
-//   clearDefaultAddress,
 // };
-
-const db = require('../config/db');
-
-// ============================
-// GET ALL ADDRESSES
-// ============================
-const getAllAddresses = (userId, callback) => {
-  const sql = `SELECT * FROM addresses WHERE user_id = ? ORDER BY is_default DESC`;
-  db.query(sql, [userId], callback);
-};
-
-// ============================
-// GET SINGLE ADDRESS (FOR CHECKOUT)
-// ============================
-const getAddressById = (userId, addressId, callback) => {
-  const sql = `
-    SELECT *
-    FROM addresses
-    WHERE id = ? AND user_id = ?
-  `;
-  db.query(sql, [addressId, userId], callback);
-};
-
-// ============================
-// CREATE ADDRESS
-// ============================
-const createAddress = (userId, data, callback) => {
-  const sql = `
-    INSERT INTO addresses 
-    (user_id, name, phone, address_line1, address_line2, city, state, pincode, is_default)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-
-  db.query(
-    sql,
-    [
-      userId,
-      data.name,
-      data.phone,
-      data.address_line1,
-      data.address_line2,
-      data.city,
-      data.state,
-      data.pincode,
-      data.is_default ? 1 : 0,
-    ],
-    callback,
-  );
-};
-
-// ============================
-// CLEAR DEFAULT
-// ============================
-const clearDefaultAddress = (userId, callback) => {
-  const sql = `UPDATE addresses SET is_default = 0 WHERE user_id = ?`;
-  db.query(sql, [userId], callback);
-};
-
-// ============================
-// UPDATE ADDRESS
-// ============================
-const updateAddress = (userId, addressId, data, callback) => {
-  const sql = `
-    UPDATE addresses SET
-    name=?, phone=?, address_line1=?, address_line2=?,
-    city=?, state=?, pincode=?, is_default=?
-    WHERE id=? AND user_id=?
-  `;
-
-  db.query(
-    sql,
-    [
-      data.name,
-      data.phone,
-      data.address_line1,
-      data.address_line2,
-      data.city,
-      data.state,
-      data.pincode,
-      data.is_default ? 1 : 0,
-      addressId,
-      userId,
-    ],
-    callback,
-  );
-};
-
-// ============================
-// DELETE ADDRESS
-// ============================
-const deleteAddress = (userId, addressId, callback) => {
-  const sql = `DELETE FROM addresses WHERE id=? AND user_id=?`;
-  db.query(sql, [addressId, userId], callback);
-};
-
-module.exports = {
-  getAllAddresses,
-  createAddress,
-  getAddressById,
-  clearDefaultAddress,
-  updateAddress,
-  deleteAddress,
-};

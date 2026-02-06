@@ -1,7 +1,7 @@
 const adminService = require('../services/adminService');
 const productService = require('../services/productService');
 
-// ================= DASHBOARD =================
+// ================= DASHBOARD STATS API =================
 const getAdminStats = (req, res) => {
   adminService.fetchAdminStats((err, stats) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -9,6 +9,7 @@ const getAdminStats = (req, res) => {
   });
 };
 
+// ================= USERS API =================
 const getAllUsers = (req, res) => {
   adminService.fetchAllUsers((err, users) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -16,13 +17,15 @@ const getAllUsers = (req, res) => {
   });
 };
 
+// Render users with order count page
 const getAllUsersForAdmin = (req, res) => {
   adminService.fetchAllUsersWithOrders((err, users) => {
     if (err) return res.status(500).send(err.message);
-    res.render("admin/allUsers", { users });
+    res.render('admin/allUsers', { users });
   });
 };
 
+// ================= ORDERS API =================
 const getAllOrders = (req, res) => {
   adminService.fetchAllOrders((err, orders) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -30,6 +33,7 @@ const getAllOrders = (req, res) => {
   });
 };
 
+// ================= LOW STOCK =================
 const getLowStockProducts = (req, res) => {
   adminService.fetchLowStockProducts((err, products) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -54,46 +58,68 @@ const getDashboard = (req, res) => {
       console.error(err);
       return res.status(500).send('Server error');
     }
-
     res.render('admin/dashboard', { stats });
   });
 };
 
 // ================= ORDERS PAGE =================
-const getAllOrdersPage = (req, res) => {
-  adminService.fetchAllOrders((err, orders) => {
-    if (err) return res.status(500).send('DB error');
-
-    // optional: add empty activities for now
-    orders.forEach((order) => {
-      order.activities = [];
-    });
-
+const getAllOrdersPage = async (req, res) => {
+  try {
+    const orders = await adminService.fetchAllOrders();
+    orders.forEach(order => (order.activities = [])); // optional
     res.render('admin/adminOrders', { orders });
-  });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('DB error');
+  }
 };
 
 // ================= ADMIN PRODUCTS PAGE =================
-const getAllAdminProductsPage = (req, res) => {
-  productService.fetchAllProducts((err, products) => {
-    if (err) return res.status(500).send('DB error');
-    res.render('admin/adminProducts', { products }); // create this EJS page for admin
-  });
+const getAllAdminProductsPage = async (req, res) => {
+  try {
+    const products = await productService.getAllProducts(); // now this exists
+    res.render('admin/adminProducts', { products });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('DB error');
+  }
 };
 
 // ================= ADMIN PRODUCT ACTIONS =================
-const addProduct = (req, res) => {
-  const { name, price, description, stock } = req.body;
-  const image_url = req.file ? req.file.path : null;
+// const addProduct = (req, res) => {
+//   const { name, price, description, stock } = req.body;
+//   const image_url = req.file ? req.file.path : null;
 
-  productService.createProduct(
-    { name, price, description, stock, image_url },
-    (err) => {
-      if (err)
-        return res.status(500).json({ message: 'Server error', error: err });
-      res.redirect('/api/admin/products-admin'); // after add, redirect to admin products page
-    },
-  );
+//   productService.createProduct({ name, price, description, stock, image_url }, (err) => {
+//     if (err) return res.status(500).json({ message: 'Server error', error: err });
+//     res.redirect('/products');
+//   });
+// };
+
+const addProduct = async (req, res) => {
+  try {
+    const { name, price, description, stock } = req.body;
+
+    if (!name || !price || stock === undefined) {
+      return res.status(400).json({
+        message: 'name, price, and stock are required',
+      });
+    }
+
+    const image_url = req.file ? req.file.path : null;
+
+    const product = await productService.createProduct({
+      name,
+      price,
+      description,
+      stock,
+      image_url,
+    });
+
+    return res.redirect('/products');
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err });
+  }
 };
 
 const updateProduct = (req, res) => {
@@ -116,22 +142,22 @@ const restockProduct = (req, res) => {
   productService.restockProduct(id, quantity, (err) => {
     if (err)
       return res.status(500).json({ message: 'Failed to restock', error: err });
-    res.redirect('/admin/products-admin');
+    res.redirect('/api/admin/products-admin');
   });
 };
 
+// ================= EDIT PRODUCT PAGE =================
 const renderEditProductPage = (req, res) => {
   const productId = req.params.id;
-
   adminService.getProductById(productId, (err, product) => {
     if (err) return res.status(500).send('Server error');
     if (!product) return res.status(404).send('Product not found');
-
     res.render('admin/adminEditProduct', { product });
   });
 };
 
-const renderAddProductPage = (req, res) => {
+// ================= ADD PRODUCT PAGE =================
+const renderAddProductPage = async (req, res) => {
   res.render('admin/addProduct');
 };
 
@@ -149,5 +175,5 @@ module.exports = {
   restockProduct,
   renderEditProductPage,
   renderAddProductPage,
-  getAllUsersForAdmin
+  getAllUsersForAdmin,
 };

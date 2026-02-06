@@ -1,41 +1,40 @@
-const productModel = require('../models/productModel');
-
-// Create product
-const createProduct = (product, callback) => {
-  productModel.createProduct(product, callback);
-};
+const productModel = require('../models/productModel'); // your wrapper
 
 // Fetch all products
-const fetchAllProducts = (callback) => {
-  productModel.getAllProducts(callback);
+const getAllProducts = async () => {
+  return await productModel.getAllProducts(); // ✅ call the function your model actually exports
+};
+
+// Create product
+const createProduct = async (product) => {
+  return await productModel.createProduct(product);
 };
 
 // Get single product by id
-const getProduct = (id, callback) => {
-  productModel.getProductById(id, callback);
+const getProductById = async (id) => {
+  return await productModel.getProductById(id);
 };
 
-// Edit product
-const editProduct = (id, data, callback) => {
-  productModel.updateProduct(id, data, callback);
+// Update product
+const updateProduct = async (id, data) => {
+  return await productModel.updateProduct(id, data);
 };
 
-// update stock
-const restockProduct = (productId, quantity, callback) => {
-  productModel.updateStock(productId, quantity, callback);
+// Update stock
+const updateStock = async (productId, quantity) => {
+  return await productModel.updateStock(productId, quantity);
 };
 
-// search product
-const searchProducts = (text, callback) => {
-  productModel.searchProducts(text, callback);
+// Search
+const searchProducts = async (text) => {
+  return await productModel.searchProducts(text);
 };
-
 
 module.exports = {
+  getAllProducts,
   createProduct,
-  fetchAllProducts,
-  getProduct,
-  editProduct,
-  restockProduct,
-  searchProducts
+  getProductById,
+  updateProduct,
+  updateStock,
+  searchProducts,
 };

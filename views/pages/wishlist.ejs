@@ -47,70 +47,65 @@
 
                 <div class="showcase">
 
-                <div class="showcase-banner">
+                  <div class="showcase-banner">
 
-                    <!-- IMAGE (you’ll connect later) -->
                     <img
-                    src="<%= item.image_url || '' %>"
-                    alt="<%= item.name %>"
-                    class="product-img default"
-                    width="300"
+                      src="<%= item.product_id.image_url %>"
+                      alt="<%= item.product_id.name %>"
+                      class="product-img default"
+                      width="300"
                     />
 
                     <img
-                    src="<%= item.image_url || '' %>"
-                    alt="<%= item.name %>"
-                    class="product-img hover"
-                    width="300"
+                      src="<%= item.product_id.image_url %>"
+                      alt="<%= item.product_id.name %>"
+                      class="product-img hover"
+                      width="300"
                     />
-
-                    <!-- badge optional -->
-                    <% if (item.discount) { %>
-                    <p class="showcase-badge"><%= item.discount %>%</p>
-                    <% } %>
 
                     <div class="showcase-actions">
 
-                    <!-- remove from wishlist -->
-                    <form action="/api/wishlist/remove/<%= item.wishlist_id %>" method="POST">
-                      <button type="submit" class="btn-action remove-wishlist">
-                        <ion-icon name="heart"></ion-icon>
-                      </button>
-                    </form>
+                      <!-- remove from wishlist -->
+                      <form action="/api/wishlist/remove/<%= item.product_id._id %>" method="POST">
+                        <button type="submit" class="btn-action remove-wishlist">
+                          <ion-icon name="heart"></ion-icon>
+                        </button>
+                      </form>
 
-                    <!-- view product -->
-                    <a href="/products/<%= item.product_id %>" class="btn-action">
+                      <!-- view product -->
+                      <a href="/products/<%= item.product_id._id %>" class="btn-action">
                         <ion-icon name="eye-outline"></ion-icon>
-                    </a>
+                      </a>
 
-                    <!-- add to cart -->
-                    <form action="/api/cart/add" method="POST">
-                      <input type="hidden" name="productId" value="<%= item.product_id %>">
-                      <input type="hidden" name="quantity" value="1">
-                      <button class="add-to-cart-btn btn-action">
-                        <ion-icon name="bag-add-outline"></ion-icon>
-                      </button>
-                    </form>
+                      <!-- add to cart -->
+                      <form action="/api/cart/add" method="POST">
+                        <input type="hidden" name="productId" value="<%= item.product_id._id %>">
+                        <input type="hidden" name="quantity" value="1">
+                        <button class="add-to-cart-btn btn-action">
+                          <ion-icon name="bag-add-outline"></ion-icon>
+                        </button>
+                      </form>
 
                     </div>
+                  </div>
+
+                  <div class="showcase-content">
+
+                    <div class="divider"></div>
+
+                    <h3 class="product-name">
+                      <a href="/products/<%= item.product_id._id %>">
+                        <%= item.product_id.name %>
+                      </a>
+                    </h3>
+
+                    <div class="divider small"></div>
+
+                    <p class="product-price">₹ <%= item.product_id.price %></p>
+
+                  </div>
                 </div>
 
-                <div class="showcase-content">
-
-                  <div class="divider"></div>
-
-                  <h3 class="product-name">
-                    <a href="/products/<%= item.product_id %>">
-                      <%= item.name %>
-                    </a>
-                  </h3>
-
-                  <div class="divider small"></div>
-
-                  <p class="product-price">₹ <%= item.price %></p>
-
-                </div>
-                </div>
 
             <% }) %>
 

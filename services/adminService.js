@@ -1,57 +1,103 @@
-const adminModel = require('../models/adminModel');
-const db=require("../config/db");
+const User = require('../schema/userSchema');
+const Product = require('../models/productModel');
+const Order = require('../models/orderModel');
 
-const fetchAdminStats = (callback) => {
-  adminModel.getDashboardStats((err, result) => {
-    if (err) return callback(err);
-    callback(null, result[0]);
-  });
-};
+// Fetch dashboard stats
+const fetchAdminStats = async (callback) => {
+  try {
+    const totalUsers = await User.countDocuments({ role: 'user' });
+    const totalProducts = await Product.countDocuments();
+    const lowStockProducts = await Product.countDocuments({ stock: { $lte: 5 } });
+    const totalOrders = await Order.countDocuments();
+    const paidOrders = await Order.countDocuments({ order_status: 'paid' });
+    const shippedOrders = await Order.countDocuments({ order_status: 'shipped' });
+    const outForDeliveryOrders = await Order.countDocuments({ order_status: 'out_for_delivery' });
+    const deliveredOrders = await Order.countDocuments({ order_status: 'delivered' });
+    const cancelledOrders = await Order.countDocuments({ order_status: 'cancelled' });
+    const totalRevenueAgg = await Order.aggregate([
+      { $match: { payment_status: 'success' } },
+      { $group: { _id: null, totalRevenue: { $sum: '$total' } } }
+    ]);
+    const totalRevenue = totalRevenueAgg[0]?.totalRevenue || 0;
 
-const fetchAllUsers = (callback) => {
-  adminModel.getAllUsers((err, results) => {
-    if (err) return callback(err);
-    callback(null, results);
-  });
-};
-
-const fetchAllOrders = (callback) => {
-  adminModel.getAllOrders((err, results) => {
-    if (err) return callback(err);
-    callback(null, results);
-  });
-};
-
-const fetchLowStockProducts = (callback) => {
-  adminModel.getLowStockProducts((err, results) => {
-    if (err) return callback(err);
-    callback(null, results);
-  });
-};
-
-const getSubcategories = (categoryId, callback) => {
-  adminModel.getSubcategoriesByCategory(categoryId, callback);
-};
-
-const renderAddProduct = (req, res) => {
-  adminModel.getAllCategories((err, categories) => {
-    if (err) return res.status(500).send("DB error");
-
-    res.render("admin/addProduct", {
-      categories
+    callback(null, {
+      totalUsers,
+      totalProducts,
+      lowStockProducts,
+      totalOrders,
+      paidOrders,
+      shippedOrders,
+      outForDeliveryOrders,
+      deliveredOrders,
+      cancelledOrders,
+      totalRevenue
     });
-  });
+  } catch (err) {
+    callback(err);
+  }
 };
 
-const getProductById = (productId, callback) => {
-  adminModel.getProductById(productId, callback);
+// Fetch all users
+const fetchAllUsers = async (callback) => {
+  try {
+    const users = await User.find({ role: 'user' }).select('_id name email role createdAt');
+    callback(null, users);
+  } catch (err) {
+    callback(err);
+  }
 };
 
-const fetchAllUsersWithOrders = (callback) => {
-  adminModel.getAllUsersWithOrderCount((err, results) => {
-    if (err) return callback(err);
-    callback(null, results);
-  });
+// Fetch all orders
+const fetchAllOrders = async () => {
+  return await Order.find()
+    .populate('user', '_id name email') // populate user
+    .populate('items.product', '_id name price image_url') // populate product
+    .sort({ createdAt: -1 })
+    .lean();
+};
+
+// Fetch low stock products
+const fetchLowStockProducts = async (callback) => {
+  try {
+    const products = await Product.find({ stock: { $lte: 10 } }).sort({ stock: 1 });
+    callback(null, products);
+  } catch (err) {
+    callback(err);
+  }
+};
+
+// Get single product by ID
+const getProductById = async (productId, callback) => {
+  try {
+    const product = await Product.findById(productId);
+    callback(null, product);
+  } catch (err) {
+    callback(err);
+  }
+};
+
+// Fetch all users with order count
+const fetchAllUsersWithOrders = async (callback) => {
+  try {
+    const usersWithOrders = await User.aggregate([
+      { $match: { role: 'user' } },
+      {
+        $lookup: {
+          from: 'orders',
+          localField: '_id',
+          foreignField: 'user',
+          as: 'orders'
+        }
+      },
+      {
+        $addFields: { totalOrders: { $size: '$orders' } }
+      },
+      { $project: { name: 1, email: 1, totalOrders: 1 } }
+    ]);
+    callback(null, usersWithOrders);
+  } catch (err) {
+    callback(err);
+  }
 };
 
 module.exports = {
@@ -59,8 +105,6 @@ module.exports = {
   fetchAllUsers,
   fetchAllOrders,
   fetchLowStockProducts,
-  getSubcategories,
-  renderAddProduct,
   getProductById,
   fetchAllUsersWithOrders
 };
