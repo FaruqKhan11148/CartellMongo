@@ -1,6 +1,7 @@
 const User = require('../schema/userSchema');
-const Product = require('../models/productModel');
-const Order = require('../models/orderModel');
+const Order = require('../schema/orderSchema');
+const Product = require('../schema/productSchema'); // <--- use schema, not model wrapper
+
 
 // Fetch dashboard stats
 const fetchAdminStats = async (callback) => {
@@ -9,7 +10,7 @@ const fetchAdminStats = async (callback) => {
     const totalProducts = await Product.countDocuments();
     const lowStockProducts = await Product.countDocuments({ stock: { $lte: 5 } });
     const totalOrders = await Order.countDocuments();
-    const paidOrders = await Order.countDocuments({ order_status: 'paid' });
+    const paidOrders = await Order.countDocuments({ status: 'paid' });
     const shippedOrders = await Order.countDocuments({ order_status: 'shipped' });
     const outForDeliveryOrders = await Order.countDocuments({ order_status: 'out_for_delivery' });
     const deliveredOrders = await Order.countDocuments({ order_status: 'delivered' });

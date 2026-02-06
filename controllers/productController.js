@@ -3,7 +3,7 @@ const productService = require('../services/productService');
 // Get all products
 const getProducts = async (req, res) => {
   try {
-    const products = await productService.fetchAllProducts();
+    const products = await productService.getAllProducts();
     res.render('pages/products', { products });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err });

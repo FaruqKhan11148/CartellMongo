@@ -19,9 +19,9 @@ const getDashboardStats = async (callback) => {
     const deliveredOrders = await Order.countDocuments({ order_status: 'delivered' });
     const cancelledOrders = await Order.countDocuments({ order_status: 'cancelled' });
     const totalRevenueAgg = await Order.aggregate([
-      { $match: { payment_status: 'success' } },
-      { $group: { _id: null, totalRevenue: { $sum: '$total' } } },
-    ]);
+  { $match: { status: 'paid' } },
+  { $group: { _id: null, totalRevenue: { $sum: '$total' } } }
+]);
     const totalRevenue = totalRevenueAgg[0]?.totalRevenue || 0;
 
     callback(null, {

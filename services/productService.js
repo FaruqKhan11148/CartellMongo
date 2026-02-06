@@ -2,7 +2,7 @@ const productModel = require('../models/productModel'); // your wrapper
 
 // Fetch all products
 const getAllProducts = async () => {
-  return await productModel.getAllProducts(); // ✅ call the function your model actually exports
+  return await productModel.getAllProducts();
 };
 
 // Create product
