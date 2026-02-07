@@ -1,39 +1,30 @@
-// adminOrderController.js
 const orderModel = require('../models/orderModel');
 
-exports.updateOrderStatus = (req, res) => {
-  const orderId = req.params.id;
-  const { status: newStatus } = req.body;
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const { status: newStatus } = req.body;
 
-  orderModel.getOrderById(orderId, (err, rows) => {
-    if (err)
-      return res.status(500).json({ message: 'Database error' });
+    const order = await orderModel.getOrderById(orderId);
 
-    if (!rows || rows.length === 0)
-      return res.status(404).json({ message: 'Order not found' });
+    if (!order) {
+      return res.status(404).send('Order not found');
+    }
 
-    const order = rows[0];
+    const currentStatus = order.status;          // ✅ Mongo field
+    const paymentStatus = order.paymentStatus;   // ✅ Mongo field
 
-    const currentStatus = order.order_status;
-    const paymentStatus = order.payment_status;
-
-    // 🔐 PAYMENT GATE (very important)
-    const deliveryStatuses = [
-      'shipped',
-      'out_for_delivery',
-      'delivered',
-    ];
+    // 🔐 PAYMENT GATE
+    const deliveryStatuses = ['shipped', 'out_for_delivery', 'delivered'];
 
     if (
       deliveryStatuses.includes(newStatus) &&
       paymentStatus !== 'success'
     ) {
-      return res.status(400).json({
-        message: 'Order must be paid before delivery process',
-      });
+      return res.status(400).send('Order must be paid first');
     }
 
-    // 🔁 STATUS FLOW RULE
+    // 🔁 STATUS FLOW
     const allowedTransitions = {
       created: ['paid', 'cancelled'],
       paid: ['shipped', 'cancelled'],
@@ -44,23 +35,17 @@ exports.updateOrderStatus = (req, res) => {
     };
 
     if (!allowedTransitions[currentStatus]?.includes(newStatus)) {
-      return res.status(400).json({
-        message: `Invalid transition from ${currentStatus} → ${newStatus}`,
-      });
+      return res
+        .status(400)
+        .send(`Invalid transition ${currentStatus} → ${newStatus}`);
     }
 
-    // ✅ UPDATE STATUS
-    orderModel.updateOrderStatus(orderId, newStatus, (err) => {
-      if (err)
-        return res.status(500).json({ message: 'Status update failed' });
+    // ✅ UPDATE ORDER
+    await orderModel.updateOrderStatus(orderId, newStatus);
 
-      // 🧾 LOG HISTORY
-      orderModel.addOrderStatusLog(orderId, newStatus, () => {});
-
-      res.render("pages/success", {
-        message: `Order updated to ${newStatus}`,
-        redirect: '/api/admin/orders',
-      });
-    });
-  });
+    res.redirect('/api/admin/orders');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Status update failed');
+  }
 };

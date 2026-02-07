@@ -33,8 +33,8 @@ router.post('/pay-multiple', protect, orderController.payMultipleOrders);
 router.get('/:orderId', protect, orderController.getOrderById);
 
 // ADMIN ORDER ROUTES
-router.patch(
-  '/admin/:id/status',
+router.post(
+  '/order/:id/status',
   protect,
   adminOnly,
   adminOrderController.updateOrderStatus,

@@ -40,14 +40,18 @@
 
       <% if (orders && orders.length > 0) { %>
 
-        <% orders.forEach(order => { %>
+        <% orders.forEach(order => { 
+          const orderStatus = order.status || 'pending';
+          const paymentStatus = order.paymentStatus || 'pending';
+        %>
+
           <div class="order-card">
 
             <!-- top row -->
             <div class="order-header">
               <div>
                 <p class="label">Order ID</p>
-                <p>#<%= order.id %></p>
+                <p>#<%= order._id %></p>
               </div>
               <div>
                 <p class="label">Ordered On</p>
@@ -55,7 +59,7 @@
               </div>
               <div>
                 <p class="label">Total</p>
-                <p class="price">₹ <%= order.total %></p>
+                <p class="price">₹ <%= order.total || 0 %></p>
               </div>
             </div>
 
@@ -63,39 +67,40 @@
             <div class="order-body">
               <p>
                 <strong>Status:</strong>
-                <span class="status <%= order.order_status %>">
-                  <%= order.order_status.replaceAll("_", " ") %>
+                <span class="status <%= orderStatus %>">
+                  <%= orderStatus.replaceAll('_', ' ') %>
                 </span>
               </p>
 
               <p>
                 <strong>Payment:</strong>
-                <%= order.payment_status %>
+                <%= paymentStatus.replaceAll('_', ' ') %>
               </p>
 
               <% if (order.coupon_code) { %>
                 <p>
                   <strong>Coupon:</strong>
                   <%= order.coupon_code %> 
-                  (−₹<%= order.discount %>)
+                  (−₹<%= order.discount || 0 %>)
                 </p>
               <% } %>
             </div>
 
             <!-- actions -->
             <div class="order-actions">
-              <% if (order.order_status === "paid") { %>
-                <form method="POST" action="/api/admin/orders/<%= order.id %>/status">
+              <% if (orderStatus === "paid") { %>
+                <form method="POST" action="/api/admin/orders/<%= order._id %>/status">
                   <input type="hidden" name="status" value="shipped">
                   <button type="submit" class="btn-view">Mark Shipped</button>
                 </form>
-              <% } else if (order.order_status === "shipped") { %>
-                <form method="POST" action="/api/admin/orders/<%= order.id %>/status">
+
+              <% } else if (orderStatus === "shipped") { %>
+                <form method="POST" action="/api/admin/orders/<%= order._id %>/status">
                   <input type="hidden" name="status" value="out_for_delivery">
                   <button type="submit" class="btn-view">Out for Delivery</button>
                 </form>
-              <% } else if (order.order_status === "out_for_delivery") { %>
-                <form method="POST" action="/api/admin/orders/<%= order.id %>/status">
+              <% } else if (orderStatus === "out_for_delivery") { %>
+                <form method="POST" action="/api/admin/orders/<%= order._id %>/status">
                   <input type="hidden" name="status" value="delivered">
                   <button type="submit" class="btn-view">Mark Delivered</button>
                 </form>
@@ -106,13 +111,18 @@
             <div class="order-activities">
               <h4>Activity Log:</h4>
               <ul>
-                <% order.activities?.forEach(act => { %>
-                  <li><%= act.timestamp %> — <%= act.status.replaceAll("_", " ") %> by <%= act.updated_by %></li>
+                <% (order.activities || []).forEach(act => { %>
+                  <li>
+                    <%= act.timestamp %> — 
+                    <%= (act.status || '').replaceAll('_', ' ') %>
+                    by <%= act.updated_by || 'system' %>
+                  </li>
                 <% }) %>
               </ul>
             </div>
 
           </div>
+
         <% }) %>
 
       <% } else { %>
@@ -121,24 +131,13 @@
         </p>
       <% } %>
 
-      </section>
+    </section>
+
 
 
     <script src="/assets/js/adminOrders.js"></script>
 
     <%- include("../partials/footer") %>
 
-    <script src="/assets/js/script.js"></script>
-    <!--
-    - ionicon link
-  -->
-    <script
-      type="module"
-      src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"
-    ></script>
-    <script
-      nomodule
-      src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"
-    ></script>
   </body>
 </html>

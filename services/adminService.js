@@ -1,22 +1,24 @@
 const User = require('../schema/userSchema');
-const Product = require('../models/productModel');
-const Order = require('../models/orderModel');
+const Order = require('../schema/orderSchema');
+const Product = require('../schema/productSchema'); // <--- use schema, not model wrapper
 
 // Fetch dashboard stats
 const fetchAdminStats = async (callback) => {
   try {
     const totalUsers = await User.countDocuments({ role: 'user' });
     const totalProducts = await Product.countDocuments();
-    const lowStockProducts = await Product.countDocuments({ stock: { $lte: 5 } });
+    const lowStockProducts = await Product.countDocuments({
+      stock: { $lte: 5 },
+    });
     const totalOrders = await Order.countDocuments();
-    const paidOrders = await Order.countDocuments({ order_status: 'paid' });
-    const shippedOrders = await Order.countDocuments({ order_status: 'shipped' });
-    const outForDeliveryOrders = await Order.countDocuments({ order_status: 'out_for_delivery' });
-    const deliveredOrders = await Order.countDocuments({ order_status: 'delivered' });
-    const cancelledOrders = await Order.countDocuments({ order_status: 'cancelled' });
+    const paidOrders = await Order.countDocuments({ status: 'paid' });
+    const shippedOrders = await Order.countDocuments({ status: 'shipped' });
+    const outForDeliveryOrders = await Order.countDocuments({ status: 'out_for_delivery' });
+    const deliveredOrders = await Order.countDocuments({ status: 'delivered' });
+    const cancelledOrders = await Order.countDocuments({ status: 'cancelled' });
     const totalRevenueAgg = await Order.aggregate([
-      { $match: { payment_status: 'success' } },
-      { $group: { _id: null, totalRevenue: { $sum: '$total' } } }
+      { $match: { paymentStatus: 'success' } },
+      { $group: { _id: null, totalRevenue: { $sum: '$total' } } },
     ]);
     const totalRevenue = totalRevenueAgg[0]?.totalRevenue || 0;
 
@@ -30,7 +32,7 @@ const fetchAdminStats = async (callback) => {
       outForDeliveryOrders,
       deliveredOrders,
       cancelledOrders,
-      totalRevenue
+      totalRevenue,
     });
   } catch (err) {
     callback(err);
@@ -40,7 +42,9 @@ const fetchAdminStats = async (callback) => {
 // Fetch all users
 const fetchAllUsers = async (callback) => {
   try {
-    const users = await User.find({ role: 'user' }).select('_id name email role createdAt');
+    const users = await User.find({ role: 'user' }).select(
+      '_id name email role createdAt',
+    );
     callback(null, users);
   } catch (err) {
     callback(err);
@@ -59,7 +63,9 @@ const fetchAllOrders = async () => {
 // Fetch low stock products
 const fetchLowStockProducts = async (callback) => {
   try {
-    const products = await Product.find({ stock: { $lte: 10 } }).sort({ stock: 1 });
+    const products = await Product.find({ stock: { $lte: 10 } }).sort({
+      stock: 1,
+    });
     callback(null, products);
   } catch (err) {
     callback(err);
@@ -86,13 +92,13 @@ const fetchAllUsersWithOrders = async (callback) => {
           from: 'orders',
           localField: '_id',
           foreignField: 'user',
-          as: 'orders'
-        }
+          as: 'orders',
+        },
       },
       {
-        $addFields: { totalOrders: { $size: '$orders' } }
+        $addFields: { totalOrders: { $size: '$orders' } },
       },
-      { $project: { name: 1, email: 1, totalOrders: 1 } }
+      { $project: { name: 1, email: 1, totalOrders: 1 } },
     ]);
     callback(null, usersWithOrders);
   } catch (err) {
@@ -106,5 +112,5 @@ module.exports = {
   fetchAllOrders,
   fetchLowStockProducts,
   getProductById,
-  fetchAllUsersWithOrders
+  fetchAllUsersWithOrders,
 };
