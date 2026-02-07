@@ -1,5 +1,6 @@
 const productModel = require('../models/productModel'); // your wrapper
 
+
 // Fetch all products
 const getAllProducts = async () => {
   return await productModel.getAllProducts();

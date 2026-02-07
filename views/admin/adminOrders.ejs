@@ -89,7 +89,7 @@
             <!-- actions -->
             <div class="order-actions">
               <% if (orderStatus === "paid") { %>
-                <form method="POST" action="/api/admin/admin/<%= order._id %>/status">
+                <form method="POST" action="/api/admin/orders/<%= order._id %>/status">
                   <input type="hidden" name="status" value="shipped">
                   <button type="submit" class="btn-view">Mark Shipped</button>
                 </form>

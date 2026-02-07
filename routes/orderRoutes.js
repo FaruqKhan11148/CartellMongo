@@ -34,7 +34,7 @@ router.get('/:orderId', protect, orderController.getOrderById);
 
 // ADMIN ORDER ROUTES
 router.post(
-  '/admin/:id/status',
+  '/order/:id/status',
   protect,
   adminOnly,
   adminOrderController.updateOrderStatus,

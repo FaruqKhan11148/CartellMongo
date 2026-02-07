@@ -66,7 +66,7 @@ const getDashboard = (req, res) => {
 const getAllOrdersPage = async (req, res) => {
   try {
     const orders = await adminService.fetchAllOrders();
-    orders.forEach(order => (order.activities = [])); // optional
+    orders.forEach((order) => (order.activities = [])); // optional
     res.render('admin/adminOrders', { orders });
   } catch (err) {
     console.error(err);
@@ -122,15 +122,18 @@ const addProduct = async (req, res) => {
   }
 };
 
-const updateProduct = (req, res) => {
-  const { id } = req.params;
-  productService.editProduct(id, req.body, (err) => {
-    if (err)
-      return res
-        .status(500)
-        .json({ message: 'Failed to update product', error: err });
-    res.redirect('/api/admin/products-admin');
-  });
+const updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await productService.updateProduct(id, req.body);
+
+    return res.redirect('/api/admin/products-admin');
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ message: 'Failed to update product', error: err });
+  }
 };
 
 const restockProduct = (req, res) => {

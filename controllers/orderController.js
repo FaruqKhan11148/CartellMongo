@@ -190,8 +190,12 @@ const markPaid = async (req, res) => {
       return res.status(400).json({ message: 'Order already paid' });
 
     order.status = 'paid';
-    order.payment = { method, transaction_id, paidAt: new Date() };
+    order.paymentStatus = 'success';
+    order.paymentMethod = method;
+    order.transactionId = transaction_id;
+
     order.statusLogs.push({ status: 'paid', date: new Date() });
+
     await order.save();
 
     res.json({
@@ -303,7 +307,10 @@ const payMultipleOrders = async (req, res) => {
       if (order.status === 'paid') continue; // skip if already paid
 
       order.status = 'paid';
-      order.payment = { method, transaction_id, paidAt: new Date() };
+      order.paymentStatus = 'success';
+      order.paymentMethod = method;
+      order.transactionId = transaction_id;
+
       order.statusLogs.push({ status: 'paid', date: new Date() });
 
       await order.save();

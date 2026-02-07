@@ -1,26 +1,25 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const productService = require("../services/productService");
-const { protect } = require("../middlewares/authMiddleware");
+const productService = require('../services/productService');
+const { protect } = require('../middlewares/authMiddleware');
 
-router.get("/", protect, (req, res) => {
-  const searchText = req.query.q || "";
+router.get('/', protect, async (req, res) => {
+  try {
+    const searchText = req.query.q || '';
 
-  productService.searchProducts(searchText, (err, results) => {
-    if (err) {
-      console.log(err);
-      return res.render("pages/searchResults", {
-        products: [],
-        searchText
-      });
-    }
+    const results = await productService.searchProducts(searchText);
 
-    res.render("pages/searchResults", {
+    res.render('pages/searchResults', {
       products: results || [],
-      searchText
+      searchText,
     });
-  });
+  } catch (err) {
+    console.log(err);
+    res.render('pages/searchResults', {
+      products: [],
+      searchText: req.query.q || '',
+    });
+  }
 });
-
 
 module.exports = router;
