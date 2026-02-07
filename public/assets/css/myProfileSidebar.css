@@ -304,3 +304,76 @@
     display: block;
   }
 }
+
+/* ============================= */
+/* MOBILE OPTIMIZATION */
+/* ============================= */
+
+@media (max-width: 750px) {
+  /* Hide all boxes */
+  .profile-page-box,
+  .profile-page-logout {
+    display: none;
+  }
+}
+
+@media (max-width: 750px) {
+  /* Wrapper becomes column */
+  .profile-page-wrapper {
+    flex-direction: column;
+    margin: 10px;
+    gap: 15px;
+  }
+
+  /* Sidebar full width */
+  .profile-page-sidebar {
+    width: 100%;
+    border-radius: 8px;
+  }
+
+  /* Content full width */
+  .profile-page-content {
+    width: 100%;
+  }
+
+  /* Cards tighter padding */
+  .profile-page-card {
+    padding: 18px;
+    margin-bottom: 15px;
+  }
+
+  /* Input row becomes vertical */
+  .profile-page-input-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Inputs full width */
+  .profile-page-card input {
+    width: 100%;
+    font-size: 14px;
+  }
+
+  /* Buttons stacked */
+  .btns {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .submit-btn,
+  .back-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 14px;
+    border-radius: 6px;
+  }
+
+  /* Reduce font sizes slightly */
+  .profile-page-box li {
+    font-size: 13px;
+  }
+
+  .profile-page-card h2 {
+    font-size: 15px;
+  }
+}

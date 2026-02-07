@@ -86,10 +86,7 @@ const addressService = require('../services/addressService');
 const checkoutAddressPage = async (req, res) => {
   try {
     const { productId } = req.query;
-    console.log('checkoutAddressPage called for user:', req.user._id);
     const addresses = await addressService.getUserAddresses(req.user._id);
-
-    console.log('addresses:', addresses);
 
     res.render('pages/selectAddress', { addresses, productId });
   } catch (err) {
@@ -100,7 +97,6 @@ const checkoutAddressPage = async (req, res) => {
 
 // PAGE: ADD ADDRESS FORM
 const addAddressPage = (req, res) => {
-  console.log('addAddressPage called');
   res.render('pages/addAddress');
 };
 
