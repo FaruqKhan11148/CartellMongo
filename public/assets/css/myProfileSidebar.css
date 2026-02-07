@@ -276,3 +276,21 @@
 .back-btn:active {
   transform: scale(0.97);
 }
+
+/* ========================= */
+/* MOBILE RESPONSIVE SIDEBAR */
+/* ========================= */
+
+@media (max-width: 768px) {
+
+  .profile-sidebar {
+    width: 85%;
+    right: -100%;
+    padding: 18px;
+  }
+
+  .profile-sidebar.active {
+    right: 0;
+  }
+
+}
