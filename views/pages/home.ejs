@@ -21,7 +21,10 @@
   -->
     <link rel="stylesheet" href="./assets/css/style.css" />
     <link rel="stylesheet" href="./assets/css/style-prefix.css" />
+    <link rel="stylesheet" href="./css/header.css" />
     <link rel="stylesheet" href="./assets/css/myProfileSidebar.css" />
+    <link rel="stylesheet" href="./assets/css/mobileSidebar.css" />
+    <!-- LAST -->
 
     <!--
     - google font link
@@ -36,56 +39,6 @@
 
   <body>
     <div class="overlay" data-overlay></div>
-
-    <!--
-    - MODAL
-  -->
-
-    <!-- <div class="modal" data-modal>
-      <div class="modal-close-overlay" data-modal-overlay></div>
-
-      <div class="modal-content">
-        <button class="modal-close-btn" data-modal-close>
-          <ion-icon name="close-outline"></ion-icon>
-        </button>
-
-        <div class="newsletter-img">
-          <img
-            src="./assets/images/newsletter.png"
-            alt="subscribe newsletter"
-            width="400"
-            height="400"
-          />
-        </div>
-
-        <div class="newsletter">
-          <form action="#">
-            <div class="newsletter-header">
-              <h3 class="newsletter-title">Subscribe Newsletter.</h3>
-
-              <p class="newsletter-desc">
-                Subscribe the <b>CARTELL</b> to get latest products and discount
-                update.
-              </p>
-            </div>
-
-            <input
-              type="email"
-              name="email"
-              class="email-field"
-              placeholder="Email Address"
-              required
-            />
-
-            <button type="submit" class="btn-newsletter">Subscribe</button>
-          </form>
-        </div>
-      </div>
-    </div> -->
-
-    <!--
-    - NOTIFICATION TOAST
-  -->
 
     <div class="notification-toast" data-toast>
       <button class="toast-close-btn" data-toast-close>
@@ -110,21 +63,9 @@
       </div>
     </div>
 
-    <!--
-    - HEADER
-  -->
-
     <%-include("../partials/header") %>
 
-    <!--
-    - MAIN
-  -->
-
     <main>
-      <!--
-      - BANNER
-    -->
-
       <div class="banner">
         <div class="container">
           <div class="slider-container has-scrollbar">
