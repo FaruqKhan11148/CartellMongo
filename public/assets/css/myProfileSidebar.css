@@ -1,33 +1,39 @@
-/* =========================
-   PROFILE DRAWER PREMIUM
-========================= */
-
+/* Sidebar default (desktop) */
 .profile-sidebar {
   position: fixed;
   top: 0;
-  right: -320px;
+  right: -320px; /* hide offscreen on desktop */
   width: 280px;
   height: 100vh;
-  background: #ffffff;
+  background: #fff;
   box-shadow: -10px 0 30px rgba(0, 0, 0, 0.2);
   padding: 20px;
-
-  /* animation magic */
-  opacity: 0;
-  transform: translateX(40px);
+  z-index: 9999;
   transition:
     right 0.35s ease,
-    opacity 0.25s ease,
-    transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-
-  z-index: 9999;
+    left 0.35s ease;
 }
 
-/* ACTIVE STATE */
+/* Sidebar active (desktop) */
 .profile-sidebar.active {
   right: 0;
-  opacity: 1;
-  transform: translateX(0);
+}
+
+/* Overlay */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 9998;
+  transition: opacity 0.35s ease;
+}
+
+.sidebar-overlay.active {
+  display: block;
 }
 
 /* TITLE */
@@ -99,9 +105,7 @@
   border-top: 1px solid #eee;
 }
 
-
 /* profile end */
-
 
 /* PROFILE PAGE WRAPPER */
 .profile-page-wrapper {
@@ -109,7 +113,7 @@
   margin: 40px auto;
   display: flex;
   gap: 20px;
-  font-family: "Poppins", sans-serif;
+  font-family: 'Poppins', sans-serif;
 }
 
 /* LEFT SIDEBAR */
@@ -117,7 +121,7 @@
   width: 270px;
   background: #fff;
   border-radius: 4px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   padding-bottom: 15px;
 }
 
@@ -186,7 +190,7 @@
   padding: 25px;
   margin-bottom: 20px;
   border-radius: 4px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
 .profile-page-card h2 {
@@ -226,7 +230,7 @@
   margin-top: 10px;
 }
 
-.btns{
+.btns {
   display: flex;
   justify-content: space-between;
 }
@@ -277,20 +281,26 @@
   transform: scale(0.97);
 }
 
-/* ========================= */
-/* MOBILE RESPONSIVE SIDEBAR */
-/* ========================= */
-
-@media (max-width: 768px) {
-
+/* Desktop sidebar */
+@media (min-width: 751px) {
   .profile-sidebar {
-    width: 85%;
-    right: -100%;
-    padding: 18px;
+    right: -320px;
+    left: auto;
+    transition: right 0.35s ease;
   }
 
   .profile-sidebar.active {
     right: 0;
   }
+}
 
+/* Overlay only for mobile */
+@media (max-width: 750px) {
+  .sidebar-overlay {
+    display: none;
+  }
+
+  .sidebar-overlay.active {
+    display: block;
+  }
 }

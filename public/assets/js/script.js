@@ -1,7 +1,6 @@
 'use strict';
 
 // === MODAL ===
-// only one modal close function
 const modal = document.querySelector('[data-modal]');
 const modalCloseBtn = document.querySelector('[data-modal-close]');
 const modalCloseOverlay = document.querySelector('[data-modal-overlay]');
@@ -42,9 +41,6 @@ for (let i = 0; i < mobileMenuOpenBtn.length; i++) {
     mobileMenu[i].classList.add('active');
     overlay.classList.add('active');
   });
-
-  // mobileMenuCloseBtn[i].addEventListener('click', closeMobileMenu);
-  // overlay.addEventListener('click', closeMobileMenu);
 }
 
 // === ACCORDION ===
@@ -69,23 +65,36 @@ for (let i = 0; i < accordionBtn.length; i++) {
   });
 }
 
-// === PROFILE SIDEBAR ===
-const profile = document.querySelector('.profile');
-const profileSidebar = document.querySelector('.profile-sidebar'); // use class
-const profileClose = document.getElementById('closeProfile');
+document.addEventListener('DOMContentLoaded', () => {
+  const desktopProfileBtn = document.getElementById('desktopProfileBtn'); // desktop button
+  const mobileProfileBtn = document.getElementById('mobileProfileBtn'); // mobile button
+  const profileSidebar = document.getElementById('profileSidebar'); // sidebar itself
+  const closeBtn = document.getElementById('closeProfile'); // sidebar close button
 
-if (profile && profileSidebar && profileClose) {
-  profile.addEventListener('click', (e) => {
-    e.preventDefault();
-    console.log('PROFILE CLICKED ');
-    profileSidebar.classList.toggle('active');
-  });
+  const toggleSidebar = () => profileSidebar.classList.toggle('active');
+  const closeSidebar = () => profileSidebar.classList.remove('active');
 
-  profileClose.addEventListener('click', () => {
-    profileSidebar.classList.remove('active');
-    console.log('prfile clicked');
-  });
-}
+  if (desktopProfileBtn) {
+    desktopProfileBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleSidebar();
+      console.log('Desktop sidebar clicked');
+    });
+  }
+
+  if (mobileProfileBtn) {
+    mobileProfileBtn.addEventListener('click', () => {
+      toggleSidebar();
+      console.log('Mobile sidebar clicked');
+    });
+  }
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeSidebar);
+  }
+});
+
+
 
 // === USER PROFILE LOAD ===
 async function loadUserProfile() {
@@ -109,11 +118,8 @@ document.querySelectorAll('.sidebar-submenu-title').forEach((el) => {
 
     const subId = el.dataset.subcategoryId;
     const container = document.getElementById('right-side-products');
-
-    // page doesn’t have product section
     if (!container || !subId) return;
 
-    // Clear previous products
     container.innerHTML = '';
 
     try {

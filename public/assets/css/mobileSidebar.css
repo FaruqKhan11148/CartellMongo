@@ -1,0 +1,59 @@
+/* Default: desktop sidebar from right */
+.profile-sidebar {
+  position: fixed;
+  top: 0;
+  right: -320px; /* hidden offscreen right */
+  width: 280px;
+  height: 100vh;
+  background: #fff;
+  box-shadow: -10px 0 30px rgba(0,0,0,0.2);
+  padding: 20px;
+  z-index: 1001; /* above overlay */
+  transition: right 0.35s ease, left 0.35s ease;
+}
+
+.profile-sidebar.active {
+  right: 0;
+}
+
+/* mobileSidebar.css */
+
+/* MOBILE SIDEBAR (left side) */
+@media (max-width: 750px) {
+  #profileSidebar {
+    position: fixed;
+    top: 0;
+    left: -100%;        /* hidden offscreen on left */
+    right: auto;
+    width: 80%;
+    max-width: 320px;
+    height: 100vh;
+    background: #fff;
+    padding: 20px;
+    box-shadow: 4px 0 25px rgba(0,0,0,0.35); /* shadow from left */
+    overflow-y: auto;
+    transition: left 0.35s ease;
+    z-index: 9999;
+  }
+
+  #profileSidebar.active {
+    left: 0; /* slide in from left */
+  }
+
+  /* Overlay */
+  #sidebarOverlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;   
+    height: 100vh;
+    background: rgba(0,0,0,0.3);
+    z-index: 9998;
+    transition: opacity 0.35s ease;
+  }
+
+  #sidebarOverlay.active {
+    display: block;
+  }
+}

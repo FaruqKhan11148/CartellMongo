@@ -1,19 +1,17 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener('DOMContentLoaded', function () {
+  const profileBtn = document.getElementById('profileBtn'); // mobile button
+  const profileSidebar = document.getElementById('profileSidebar'); // sidebar itself
+  const closeBtn = document.getElementById('closeProfile'); // close button inside sidebar
 
-  const profileButtons = document.querySelectorAll(".profileBtn");
-  const profileSidebar = document.getElementById("profileSidebar");
-  const closeBtn = document.getElementById("closeProfile");
-
-  profileButtons.forEach(btn => {
-    btn.addEventListener("click", () => {
-      profileSidebar.classList.add("active");
-    });
-  });
-
-  if (closeBtn) {
-    closeBtn.addEventListener("click", () => {
-      profileSidebar.classList.remove("active");
+  if (profileBtn && profileSidebar) {
+    profileBtn.addEventListener('click', () => {
+      profileSidebar.classList.toggle('active');
     });
   }
 
+  if (closeBtn && profileSidebar) {
+    closeBtn.addEventListener('click', () => {
+      profileSidebar.classList.remove('active');
+    });
+  }
 });
