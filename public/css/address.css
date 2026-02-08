@@ -105,9 +105,9 @@
 
 .delete-btn,
 .edit-btn {
-  border: 2px solid black;
+  /* border: 2px solid black; */
   text-align: center;
-  border-radius: 10px;
+  border-radius: 15px;
   padding: 5px;
 }
 
@@ -128,19 +128,36 @@
 }
 
 .checkout-btn {
-  border: 2px solid black;
+  /* border: 2px solid black; */
   text-align: center;
-  border-radius: 10px;
+  border-radius: 15px;
   padding: 5px;
-  background-color: rgb(94, 255, 0);
+  background-color: rgb(0, 136, 160);
   color: rgb(255, 255, 255);
 }
 
 /* =========================
-   MOBILE FRIENDLY
-   ========================= */
+   RESPONSIVE ADDRESS SECTION
+========================= */
 
-@media (max-width: 600px) {
+/* Tablets */
+@media (max-width: 992px) {
+  .address-container {
+    margin: 25px;
+    padding: 25px;
+  }
+
+  .address-card {
+    padding: 18px;
+  }
+
+  .checkout-btn {
+    width: 60%;
+  }
+}
+
+/* Medium Phones */
+@media (max-width: 768px) {
   .address-container {
     margin: 20px;
     padding: 20px;
@@ -148,9 +165,75 @@
 
   .address-card {
     flex-direction: column;
+    gap: 15px;
   }
 
-  #continueBtn {
+  .address-left {
+    width: 100%;
+  }
+
+  .address-actions-btns {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .edit-btn,
+  .delete-btn {
+    width: 48%;
+    text-align: center;
+  }
+
+  .checkout-btn {
+    width: 80%;
     font-size: 15px;
+  }
+}
+
+/* Small Phones */
+@media (max-width: 480px) {
+  .address-container {
+    margin: 15px;
+    padding: 18px;
+  }
+
+  .address-top{
+    margin-bottom: 20px;
+  }
+
+  .address-card {
+    padding: 15px;
+    border-radius: 12px;
+    height: 250px;
+  }
+
+  .radio-wrap {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .radio-wrap input {
+    margin-bottom: 5px;
+  }
+
+  .address-left p {
+    font-size: 13px;
+  }
+
+  .address-actions-btns {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+  }
+
+  .edit-btn,
+  .delete-btn {
+    width: 35%;
+  }
+
+  .checkout-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 14px;
   }
 }

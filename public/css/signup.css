@@ -87,10 +87,85 @@ body {
   text-decoration: underline;
 }
 
-/* RESPONSIVE */
-@media (max-width: 400px) {
+/* ======================
+   EXTRA RESPONSIVENESS
+====================== */
+
+/* Tablets */
+@media (max-width: 768px) {
+  body {
+    padding: 20px;
+  }
+
   .container {
-    width: 90%;
+    width: 85%;
+    padding: 35px 25px;
+  }
+
+  .container h1 {
+    font-size: 24px;
+  }
+
+  .container input {
+    font-size: 15px;
+    padding: 14px;
+  }
+
+  .btn {
+    font-size: 15px;
+    padding: 14px;
+  }
+}
+
+/* Small Phones */
+@media (max-width: 480px) {
+  body {
+    padding: 15px;
+  }
+
+  .container {
+    width: 95%;
     padding: 30px 20px;
+    border-radius: 12px;
+  }
+
+  .container h1 {
+    font-size: 22px;
+    margin-bottom: 20px;
+  }
+
+  .container input {
+    font-size: 14px;
+    padding: 12px;
+  }
+
+  .btn {
+    font-size: 14px;
+    padding: 12px;
+  }
+
+  .container p {
+    font-size: 13px;
+  }
+}
+
+/* Extra Small Devices */
+@media (max-width: 350px) {
+  .container {
+    padding: 25px 15px;
+  }
+
+  .container h1 {
+    font-size: 20px;
+  }
+
+  .container input {
+    font-size: 13px;
+    padding: 10px;
+  }
+
+  .btn {
+    font-size: 13px;
+    padding: 10px;
   }
 }

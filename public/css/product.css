@@ -248,13 +248,26 @@
   box-shadow: none;
 }
 
-/* ===============================
-   RESPONSIVE
-================================ */
+/* =========================
+   RESPONSIVE PRODUCT GRID
+========================= */
 
+/* Tablets */
+@media (max-width: 992px) {
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+
+  .showcase-banner {
+    height: 210px;
+  }
+}
+
+/* Medium Phones */
 @media (max-width: 768px) {
   .product-main {
-    margin: 25px 15px;
+    margin: 20px 15px;
   }
 
   .product-main .title {
@@ -262,74 +275,20 @@
   }
 
   .product-grid {
-    gap: 16px;
-  }
-
-  .showcase-banner {
-    height: 200px;
-  }
-
-  .showcase-content {
-    padding: 14px;
-  }
-
-  .price {
-    font-size: 16px;
-  }
-
-  .orderBtn {
-    margin: 12px auto 14px;
-    display: block;
-    max-width: 120px;
-  }
-}
-
-@media (max-width: 500px) {
-  .product-main {
-    margin: 20px 10px;
-  }
-
-  .product-main .title {
-    font-size: 18px;
-    margin-bottom: 18px;
-  }
-
-  .product-grid {
-    grid-template-columns: 1fr;
-    gap: 14px;
+    grid-template-columns: repeat(2, 1fr); /* 👈 2 cards */
+    gap: 15px;
   }
 
   .showcase {
-    border-radius: 12px;
+    border-radius: 14px;
   }
 
   .showcase-banner {
-    height: 180px;
+    height: 190px;
   }
 
-  /* Disable hover slide animation for mobile */
-  .showcase-actions {
-    transform: none;
-    flex-direction: row;
-    bottom: 10px;
-    top: auto;
-    right: 50%;
-    transform: translateX(50%);
-  }
-
-  .showcase:hover .showcase-actions {
-    transform: translateX(50%);
-  }
-
-  .btn-action {
-    width: 36px;
-    height: 36px;
-  }
-
-  .showcase-title {
-    height: auto;
-    -webkit-line-clamp: 2;
-    font-size: 13px;
+  .showcase-content {
+    padding: 12px;
   }
 
   .price {
@@ -337,10 +296,41 @@
   }
 
   .orderBtn {
-    width: 90%;
-    max-width: none;
-    margin: 14px auto;
+    width: 85%;
+    margin: 12px auto;
+    font-size: 14px;
+  }
+}
+
+/* Small Phones */
+@media (max-width: 480px) {
+  .product-grid {
+    grid-template-columns: 1fr; /* 👈 only 1 when very small */
+  }
+
+  .showcase-banner {
+    height: 170px;
+  }
+
+  .showcase-title {
     font-size: 13px;
-    padding: 10px;
+  }
+
+  .showcase-actions {
+    bottom: 10px;
+    right: 50%;
+    transform: translateX(50%);
+    flex-direction: row;
+  }
+
+  .btn-action {
+    width: 34px;
+    height: 34px;
+  }
+
+  .orderBtn {
+    width: 90%;
+    font-size: 13px;
+    padding: 9px;
   }
 }

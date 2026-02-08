@@ -5,58 +5,116 @@
   font-family: "Segoe UI", sans-serif;
 }
 
-.success-wrapper {
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+body {
   background: #0f172a;
 }
 
+.success-wrapper {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+/* Mobile First */
 .success-card {
   background: #020617;
-  padding: 40px 50px;
+  width: 100%;
+  padding: 28px 20px;
   border-radius: 14px;
   text-align: center;
-  width: 360px;
-  box-shadow: 0 0 40px rgba(34, 197, 94, 0.35);
+  box-shadow: 0 0 30px rgba(34, 197, 94, 0.3);
   animation: pop 0.4s ease;
 }
 
 .success-icon {
-  font-size: 60px;
+  font-size: 50px;
   margin-bottom: 15px;
 }
 
 .success-card h2 {
   color: #22c55e;
+  font-size: 22px;
   margin-bottom: 10px;
 }
 
 .success-card p {
   color: #cbd5f5;
-  font-size: 15px;
+  font-size: 14px;
   margin-bottom: 25px;
+  line-height: 1.5;
 }
 
 .success-card a {
-  display: inline-block;
-  padding: 10px 25px;
+  display: block;
+  width: 100%;
+  padding: 12px;
   background: #22c55e;
   color: #022c22;
   border-radius: 8px;
   text-decoration: none;
   font-weight: 600;
-  transition: 0.2s;
+  transition: 0.2s ease;
 }
 
 .success-card a:hover {
   background: #16a34a;
 }
 
+/* Tablet & Above */
+@media (min-width: 600px) {
+  .success-card {
+    max-width: 600px;
+    height: 350px;
+    padding: 40px 50px;
+  }
+
+  .success-icon {
+    font-size: 65px;
+  }
+
+  .success-card h2 {
+    font-size: 40px;
+  }
+
+  .success-card p {
+    font-size: 30px;
+  }
+
+  .success-card a {
+    width: 150px;
+    height: 60px;
+    font-size: 25px;
+    text-align: center;
+    padding: 12px 30px;
+    display: inline-block;
+  }
+}
+
+/* Large Desktop */
+@media (min-width: 1024px) {
+  .success-card {
+    max-width: 600px;
+    padding: 55px 70px;
+  }
+
+  .success-icon {
+    font-size: 75px;
+  }
+
+  .success-card h2 {
+    font-size: 32px;
+  }
+
+  .success-card p {
+    font-size: 18px;
+  }
+}
+
 @keyframes pop {
   from {
-    transform: scale(0.8);
+    transform: scale(0.85);
     opacity: 0;
   }
   to {

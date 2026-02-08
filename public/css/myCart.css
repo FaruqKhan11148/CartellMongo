@@ -134,19 +134,91 @@
 }
 
 
-/* ===== MOBILE ===== */
+/* =========================
+   RESPONSIVE CART
+========================= */
 
+/* Tablets */
+@media (max-width: 992px) {
+
+  .cart-card {
+    grid-template-columns: 100px 1fr;
+  }
+
+  .cart-actions {
+    grid-column: span 2;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .order-btn {
+    width: 50%;
+    margin: 20px auto;
+    display: block;
+  }
+}
+
+/* Medium Phones */
 @media (max-width: 768px) {
+
   .cart-card {
     grid-template-columns: 1fr;
     text-align: center;
+    gap: 15px;
   }
 
   .cart-image img {
-    margin: auto;
+    width: 140px;
+    margin: 0 auto;
   }
 
   .cart-actions {
     justify-content: center;
+  }
+
+  .order-btn {
+    width: 80%;
+    margin: 25px auto;
+    display: block;
+  }
+}
+
+/* Small Phones */
+@media (max-width: 480px) {
+
+  .cart-container {
+    padding: 15px;
+  }
+
+  .cart-card {
+    padding: 15px;
+    gap: 12px;
+  }
+
+  .cart-image img {
+    width: 120px;
+  }
+
+  .cart-info h4 {
+    font-size: 15px;
+  }
+
+  .cart-info p {
+    font-size: 14px;
+  }
+
+  .cart-info span {
+    font-size: 13px;
+  }
+
+  .btn.remove {
+    width: 100%;
+    padding: 10px;
+  }
+
+  .order-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 14px;
   }
 }
