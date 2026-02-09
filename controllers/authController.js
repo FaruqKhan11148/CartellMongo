@@ -2,11 +2,12 @@ const authService = require('../services/authService');
 const jwt = require('jsonwebtoken');
 const TokenBlacklist = require('../models/tokenBlacklistModel');
 
+
 const signup = (req, res) => {
   const { name, email, password } = req.body;
 
   authService.signup(name, email, password, (err) => {
-    if (err) return res.status(500).json({ message: 'Server Error' });
+    if (err) return res.status(500).json({ message: 'Server Error' , err});
     res.status(201).json({ message: 'User Created' });
   });
 };
