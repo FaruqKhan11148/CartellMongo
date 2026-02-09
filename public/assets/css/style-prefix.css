@@ -917,7 +917,7 @@ body::-webkit-scrollbar-thumb:hover {
 }
 
 .banner-subtitle {
-  color: #000000;
+  color: #ffffff;
   font-size: var(--fs-7);
   font-weight: var(--weight-500);
   text-transform: capitalize;
@@ -2347,7 +2347,7 @@ footer {
 
   .banner-text {
     display: block;
-    color: #000000;
+    color: #ffffff;
     font-size: var(--fs-7);
     font-weight: var(--weight-500);
     margin-bottom: 10px;

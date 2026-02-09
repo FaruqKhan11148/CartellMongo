@@ -2,14 +2,14 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const userModel = require('../models/userModel');
 const dotenv = require('dotenv');
-const tokenBlacklistModel = require('../models/tokenBlacklistModel');
+const TokenBlacklist = require('../models/tokenBlacklistModel');
 const db = require('../config/db');
 dotenv.config();
 
 // signup
 const signup = async (name, email, password, callback) => {
   const hashedPassword = await bcrypt.hash(password, 11);
-  userModel.createUser({name, email, password: hashedPassword }, callback);
+  userModel.createUser({ name, email, password: hashedPassword }, callback);
 };
 
 // login
@@ -24,12 +24,12 @@ const login = async (email, password, callback) => {
     const token = jwt.sign(
       {
         id: results[0].id,
-        name:results[0].name,
+        name: results[0].name,
         email: results[0].email,
-        role: results[0].role
+        role: results[0].role,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "24h" }
+      { expiresIn: '24h' },
     );
 
     callback(null, token);
@@ -49,7 +49,6 @@ const getProfile = (userId, callback) => {
   });
 };
 
-
 // UPDATE PROFILE
 const updateProfile = (userId, name, email, callback) => {
   userModel.updateUserProfile(userId, name, email, callback);
@@ -60,7 +59,7 @@ const changePassword = async (
   userId,
   currentPassword,
   newPassword,
-  callback
+  callback,
 ) => {
   userModel.getUserPasswordById(userId, async (err, results) => {
     if (err) return callback(err);
@@ -80,19 +79,23 @@ const changePassword = async (
   });
 };
 
-const logout = (token, decoded, callback) => {
-  if (!token || !decoded) {
-    return callback(new Error('Invalid token'));
-  }
+const logout = async (token, decoded, callback) => {
+  try {
+    if (!token || !decoded) {
+      return callback(new Error('Invalid token'));
+    }
 
-  // JWT exp is in seconds → JS Date wants ms
-  const expiresAt = new Date(decoded.exp * 1000);
+    const expiresAt = new Date(decoded.exp * 1000);
 
-  tokenBlacklistModel.insertToken(token, expiresAt, (err) => {
-    if (err) return callback(err);
+    await TokenBlacklist.create({
+      token,
+      expiresAt,
+    });
 
     callback(null, true);
-  });
+  } catch (err) {
+    callback(err);
+  }
 };
 
 module.exports = {

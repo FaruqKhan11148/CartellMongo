@@ -1,4 +1,6 @@
 const authService = require('../services/authService');
+const jwt = require('jsonwebtoken');
+const TokenBlacklist = require('../models/tokenBlacklistModel');
 
 const signup = (req, res) => {
   const { name, email, password } = req.body;
@@ -116,19 +118,36 @@ const changePassword = (req, res) => {
   );
 };
 
-const logout = (req, res) => {
-  const token = req.token;
-  const decoded = req.user;
 
-  authService.logout(token, decoded, (err, success) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ message: 'Logout failed' });
+const logout = async (req, res) => {
+  try {
+    const token = req.cookies?.token;
+
+    if (!token) {
+      return res.status(400).json({ message: "No token found" });
     }
 
-    res.clearCookie('token', { httpOnly: true, sameSite: 'lax' });
-    res.json({ message: 'Logged out successfully' });
-  });
+    // 🔥 decode token here
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const expiresAt = new Date(decoded.exp * 1000);
+
+    await TokenBlacklist.create({
+      token,
+      expiresAt,
+    });
+
+    res.clearCookie("token", {
+      httpOnly: true,
+      sameSite: "lax",
+    });
+
+    res.json({ message: "Logged out successfully" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Logout failed" });
+  }
 };
 
 module.exports = {

@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
-const dotenv = require('dotenv');
-const db = require('../config/db');
 const User = require('../schema/userSchema');
+const TokenBlacklist = require('../models/tokenBlacklistModel');
 
 const protect = async (req, res, next) => {
   let token;
@@ -19,9 +18,15 @@ const protect = async (req, res, next) => {
   }
 
   try {
+    // 🔥 CHECK BLACKLIST FIRST
+    const blacklisted = await TokenBlacklist.findOne({ token });
+
+    if (blacklisted) {
+      return res.redirect('/signup');
+    }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // ✅ THIS NOW WORKS
     const user = await User.findById(decoded.id).select('-password');
 
     if (!user) {
@@ -36,13 +41,4 @@ const protect = async (req, res, next) => {
   }
 };
 
-// check blacklist (optional for every protected route)
-const isBlacklisted = (token, callback) => {
-  const sql = `SELECT id FROM token_blacklist WHERE token = ?`;
-  db.query(sql, [token], (err, results) => {
-    if (err) return callback(err);
-    callback(null, results.length > 0);
-  });
-};
-
-module.exports = { protect, isBlacklisted };
+module.exports = { protect };

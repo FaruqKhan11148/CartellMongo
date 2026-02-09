@@ -1,14 +1,15 @@
-const db = require("../config/db");
+const mongoose = require("mongoose");
 
-const insertToken = (token, expiresAt, callback) => {
-  const sql = `
-    INSERT INTO token_blacklist (token, expires_at)
-    VALUES (?, ?)
-  `;
+const tokenBlacklistSchema = new mongoose.Schema({
+  token: {
+    type: String,
+    required: true,
+  },
+  expiresAt: {
+    type: Date,
+    required: true,
+    index: { expires: 0 }
+  }
+});
 
-  db.query(sql, [token, expiresAt], callback);
-};
-
-module.exports = {
-  insertToken
-};
+module.exports = mongoose.model("TokenBlacklist", tokenBlacklistSchema);

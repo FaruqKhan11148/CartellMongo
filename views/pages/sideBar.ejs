@@ -51,16 +51,13 @@
   </a>
 
   <a href="/signup" class="profile-item logout">
-    <!-- <ion-icon name="person-add-outline"></ion-icon> -->
-    <!-- <ion-icon name="create-outline"></ion-icon> -->
-    <!-- <ion-icon name="people-outline"></ion-icon> -->
-    <!-- <ion-icon name="id-card-outline"></ion-icon> -->
     <ion-icon name="key-outline"></ion-icon>
     Signup
   </a>
 
-  <p class="profile-item logout">
-    <ion-icon name="log-out-outline"></ion-icon>
-    Logout
-  </p>
+  <form action="/api/auth/logout" method="post">
+    <button type="submit" class="profile-item logout">
+      <ion-icon name="log-out-outline"></ion-icon> Logout
+    </button>
+  </form>
 </div>
