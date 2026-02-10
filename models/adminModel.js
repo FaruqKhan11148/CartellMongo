@@ -4,9 +4,7 @@ const Order = require('../schema/orderSchema');
 const Category = require('../schema/categorySchema');
 const Subcategory = require('../schema/subcategorySchema');
 
-// ============================
 // DASHBOARD STATS
-// ============================
 const getDashboardStats = async (callback) => {
   try {
     const totalUsers = await User.countDocuments();
