@@ -9,17 +9,27 @@ const getDashboardStats = async (callback) => {
   try {
     const totalUsers = await User.countDocuments();
     const totalProducts = await Product.countDocuments();
-    const lowStockProducts = await Product.countDocuments({ stock: { $lte: 5 } });
+    const lowStockProducts = await Product.countDocuments({
+      stock: { $lte: 5 },
+    });
     const totalOrders = await Order.countDocuments();
     const paidOrders = await Order.countDocuments({ order_status: 'paid' });
-    const shippedOrders = await Order.countDocuments({ order_status: 'shipped' });
-    const outForDeliveryOrders = await Order.countDocuments({ order_status: 'out_for_delivery' });
-    const deliveredOrders = await Order.countDocuments({ order_status: 'delivered' });
-    const cancelledOrders = await Order.countDocuments({ order_status: 'cancelled' });
+    const shippedOrders = await Order.countDocuments({
+      order_status: 'shipped',
+    });
+    const outForDeliveryOrders = await Order.countDocuments({
+      order_status: 'out_for_delivery',
+    });
+    const deliveredOrders = await Order.countDocuments({
+      order_status: 'delivered',
+    });
+    const cancelledOrders = await Order.countDocuments({
+      order_status: 'cancelled',
+    });
     const totalRevenueAgg = await Order.aggregate([
-  { $match: { status: 'paid' } },
-  { $group: { _id: null, totalRevenue: { $sum: '$total' } } }
-]);
+      { $match: { status: 'paid' } },
+      { $group: { _id: null, totalRevenue: { $sum: '$total' } } },
+    ]);
     const totalRevenue = totalRevenueAgg[0]?.totalRevenue || 0;
 
     callback(null, {
@@ -82,7 +92,9 @@ const getLowStockProducts = async (callback) => {
 // ============================
 const getSubcategoriesByCategory = async (categoryId, callback) => {
   try {
-    const subcategories = await Subcategory.find({ category: categoryId }).lean();
+    const subcategories = await Subcategory.find({
+      category: categoryId,
+    }).lean();
     callback(null, subcategories);
   } catch (err) {
     callback(err);
@@ -121,7 +133,7 @@ const getAllUsersWithOrderCount = async (callback) => {
     const usersWithOrders = await User.aggregate([
       {
         $lookup: {
-          from: 'orders',       // collection name in Mongo
+          from: 'orders', // collection name in Mongo
           localField: '_id',
           foreignField: 'user',
           as: 'orders',
