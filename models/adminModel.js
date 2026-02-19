@@ -49,9 +49,7 @@ const getDashboardStats = async (callback) => {
   }
 };
 
-// ============================
 // GET ALL USERS
-// ============================
 const getAllUsers = async (callback) => {
   try {
     const users = await User.find().sort({ createdAt: -1 }).lean();
@@ -61,9 +59,7 @@ const getAllUsers = async (callback) => {
   }
 };
 
-// ============================
 // GET ALL ORDERS
-// ============================
 const getAllOrders = async (callback) => {
   try {
     const orders = await Order.find().sort({ createdAt: -1 }).lean();
@@ -73,9 +69,7 @@ const getAllOrders = async (callback) => {
   }
 };
 
-// ============================
 // GET LOW STOCK PRODUCTS
-// ============================
 const getLowStockProducts = async (callback) => {
   try {
     const products = await Product.find({ stock: { $lte: 10 } })
@@ -87,9 +81,7 @@ const getLowStockProducts = async (callback) => {
   }
 };
 
-// ============================
 // GET SUBCATEGORIES BY CATEGORY
-// ============================
 const getSubcategoriesByCategory = async (categoryId, callback) => {
   try {
     const subcategories = await Subcategory.find({
@@ -101,9 +93,7 @@ const getSubcategoriesByCategory = async (categoryId, callback) => {
   }
 };
 
-// ============================
 // GET ALL CATEGORIES
-// ============================
 const getAllCategories = async (callback) => {
   try {
     const categories = await Category.find().sort({ name: 1 }).lean();
@@ -113,9 +103,7 @@ const getAllCategories = async (callback) => {
   }
 };
 
-// ============================
 // GET PRODUCT BY ID
-// ============================
 const getProductById = async (productId, callback) => {
   try {
     const product = await Product.findById(productId).lean();
@@ -125,9 +113,7 @@ const getProductById = async (productId, callback) => {
   }
 };
 
-// ============================
 // GET USERS WITH ORDER COUNT
-// ============================
 const getAllUsersWithOrderCount = async (callback) => {
   try {
     const usersWithOrders = await User.aggregate([
