@@ -52,8 +52,8 @@
   gap: 10px;
   font-size: 14px;
   color: #334155;
-  /* margin: 6px 0 22px;
-  cursor: pointer; */
+  margin: 6px 0 22px;
+  cursor: pointer;
 }
 
 .address-form input[type="checkbox"] {
