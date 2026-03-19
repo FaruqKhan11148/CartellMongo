@@ -34,9 +34,9 @@
   background: #fff;
 }
 
-/* .address-form input::placeholder {
+.address-form input::placeholder {
   color: #94a3b8;
-} */
+}
 
 /* FOCUS */
 .address-form input:focus {
