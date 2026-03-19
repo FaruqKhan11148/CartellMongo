@@ -29,9 +29,9 @@
   border-radius: 10px;
   border: 1px solid #e2e8f0;
   font-size: 14px;
-  color: #0f172a;
+  /* color: #0f172a;
   transition: 0.25s ease;
-  background: #fff;
+  background: #fff; */
 }
 
 .address-form input::placeholder {
