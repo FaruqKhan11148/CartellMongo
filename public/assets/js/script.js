@@ -65,6 +65,7 @@ for (let i = 0; i < accordionBtn.length; i++) {
   });
 }
 
+// side-bar-loader
 document.addEventListener('DOMContentLoaded', () => {
   const desktopProfileBtn = document.getElementById('desktopProfileBtn'); // desktop button
   const mobileProfileBtn = document.getElementById('mobileProfileBtn'); // mobile button
@@ -93,7 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
     closeBtn.addEventListener('click', closeSidebar);
   }
 });
-
 
 
 // === USER PROFILE LOAD ===
