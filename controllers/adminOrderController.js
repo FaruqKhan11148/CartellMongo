@@ -11,10 +11,10 @@ exports.updateOrderStatus = async (req, res) => {
       return res.status(404).send('Order not found');
     }
 
-    const currentStatus = order.status;          // ✅ Mongo field
-    const paymentStatus = order.paymentStatus;   // ✅ Mongo field
+    const currentStatus = order.status;
+    const paymentStatus = order.paymentStatus;
 
-    // 🔐 PAYMENT GATE
+    // PAYMENT GATE
     const deliveryStatuses = ['shipped', 'out_for_delivery', 'delivered'];
 
     if (
@@ -24,7 +24,7 @@ exports.updateOrderStatus = async (req, res) => {
       return res.status(400).send('Order must be paid first');
     }
 
-    // 🔁 STATUS FLOW
+    // STATUS FLOW
     const allowedTransitions = {
       created: ['paid', 'cancelled'],
       paid: ['shipped', 'cancelled'],
@@ -40,7 +40,7 @@ exports.updateOrderStatus = async (req, res) => {
         .send(`Invalid transition ${currentStatus} → ${newStatus}`);
     }
 
-    // ✅ UPDATE ORDER
+    // UPDATE ORDER
     await orderModel.updateOrderStatus(orderId, newStatus);
 
     res.redirect('/api/admin/orders');
