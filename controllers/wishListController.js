@@ -1,16 +1,5 @@
 const wishListService = require('../services/wishListService');
 
-// const getWishList = async (req, res) => {
-//   try {
-//     const userId = req.user._id; // MongoDB ObjectId
-//     const items = await wishListService.getWishList(userId);
-//     res.render('pages/wishlist', { wishlist: items });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ message: 'Failed to fetch wishlist', error: err.message });
-//   }
-// };
-
 const getWishList = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -18,7 +7,7 @@ const getWishList = async (req, res) => {
 
     res.render('pages/wishlist', { wishlist: items });
   } catch (err) {
-    console.error('❌ getWishList error:', err);
+    console.error(' getWishList error:', err);
     res.status(500).json({ message: 'Failed to fetch wishlist' });
   }
 };
@@ -43,7 +32,7 @@ const addWishList = async (req, res) => {
 const removeWishList = async (req, res) => {
   try {
     const userId = req.user._id;
-    const productId = req.params.id; // Using product ID as param
+    const productId = req.params.id;
 
     await wishListService.removeWishList(userId, productId);
 
