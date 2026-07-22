@@ -18,7 +18,6 @@ const protect = async (req, res, next) => {
   }
 
   try {
-    // 🔥 CHECK BLACKLIST FIRST
     const blacklisted = await TokenBlacklist.findOne({ token });
 
     if (blacklisted) {

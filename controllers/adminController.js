@@ -85,16 +85,6 @@ const getAllAdminProductsPage = async (req, res) => {
   }
 };
 
-// ================= ADMIN PRODUCT ACTIONS =================
-// const addProduct = (req, res) => {
-//   const { name, price, description, stock } = req.body;
-//   const image_url = req.file ? req.file.path : null;
-
-//   productService.createProduct({ name, price, description, stock, image_url }, (err) => {
-//     if (err) return res.status(500).json({ message: 'Server error', error: err });
-//     res.redirect('/products');
-//   });
-// };
 
 const addProduct = async (req, res) => {
   try {

@@ -1,7 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 
-// LOAD ENV FIRST 
+// LOAD ENV FIRST
 dotenv.config();
 
 const cors = require('cors');
@@ -75,7 +75,7 @@ app.use(pageAuth);
 
 app.use(ejsRoutes);
 
-app.get('/', protect, (req, res) => {
+app.get('/', (req, res) => {
   res.render('pages/home');
 });
 
@@ -96,6 +96,4 @@ app.use(errorHandler);
 
 // START SERVER
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () =>
-  console.log(`Server running on port ${PORT}`)
-);
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

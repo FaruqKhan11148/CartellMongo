@@ -158,8 +158,6 @@ const getProductById = async (productId) => {
   return await Product.findById(productId);
 };
 
-// Transactions are not needed in MongoDB per se; atomic updates are per document
-
 module.exports = {
   getCartWithProducts,
   createOrder,
